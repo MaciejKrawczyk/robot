@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-100 flex flex-col items-center justify-start pt-8">
     <div class="w-full max-w-6xl px-4 md:px-8 lg:px-12">
       <h1>Manual</h1>
-
+      
       <Button 
         @mousedown="onTheta1Plus"
         @mouseup="onTheta1Stop"

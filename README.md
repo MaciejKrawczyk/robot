@@ -1,0 +1,1 @@
+# Project of 3 degrees of freedom (RRR - rotate, rotate, rotate) manipulator
