@@ -1,16 +1,22 @@
 from flask import Flask, jsonify, request
-import threading
 import time
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from RRRRobotAPI2 import RobotAPI
 from threads.MotorMonitoringThread import MotorMonitoringThread
 from threads.MotorThread import MotorThread
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key_here'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
+db = SQLAlchemy(app)
+
+def create_tables():
+    db.create_all()
 
 robotAPI = RobotAPI()
 
@@ -27,6 +33,119 @@ motor_monitoring_thread = MotorMonitoringThread(
     # motor2_controller=motor2_controller,  # Uncomment if motor2 is used
     motor3_controller=motor3_controller
 )
+
+##
+## crud
+##
+
+class Command(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    body = db.Column(db.String(80), nullable=False)
+    
+class Position(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    x = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    y = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    z = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    theta1 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    theta2 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    theta3 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+
+@app.route('/commands', methods=['POST'])
+def create_command():
+    data = request.get_json()
+    command = Command(name=data['name'], body=data['body'] )
+    db.session.add(command)
+    db.session.commit()
+    return jsonify({'message': 'Command created'}), 201
+
+@app.route('/commands', methods=['GET'])
+def get_commands():
+    commands = Command.query.all()
+    return jsonify([{'id': command.id, 'name': command.name, 'body': command.body} for command in commands])
+
+@app.route('/commands/<int:id>', methods=['GET'])
+def get_command(id):
+    command = Command.query.get_or_404(id)
+    return jsonify({'id': command.id, 'name': command.name, 'body': command.body})
+
+@app.route('/commands/<int:id>', methods=['PUT'])
+def update_command(id):
+    data = request.get_json()
+    command = Command.query.get_or_404(id)
+    command.name = data['name']
+    command.body = data['body']
+    db.session.commit()
+    return jsonify({'message': 'Command updated'})
+
+@app.route('/commands/<int:id>', methods=['DELETE'])
+def delete_command(id):
+    command = Command.query.get_or_404(id)
+    db.session.delete(command)
+    db.session.commit()
+    return jsonify({'message': 'Command deleted'})
+
+@app.route('/positions', methods=['POST'])
+def create_position():
+    data = request.get_json()
+    position = Position(
+        x=data['x'],
+        y=data['y'],
+        z=data['z'],
+        theta1=data['theta1'],
+        theta2=data['theta2'],
+        theta3=data['theta3']
+    )
+    db.session.add(position)
+    db.session.commit()
+    return jsonify({'message': 'Position created'}), 201
+
+@app.route('/positions', methods=['GET'])
+def get_positions():
+    positions = Position.query.all()
+    return jsonify([{
+        'id': pos.id,
+        'x': float(pos.x),
+        'y': float(pos.y),
+        'z': float(pos.z),
+        'theta1': float(pos.theta1),
+        'theta2': float(pos.theta2),
+        'theta3': float(pos.theta3)
+    } for pos in positions])
+
+@app.route('/positions/<int:id>', methods=['GET'])
+def get_position(id):
+    position = Position.query.get_or_404(id)
+    return jsonify({
+        'id': position.id,
+        'x': float(position.x),
+        'y': float(position.y),
+        'z': float(position.z),
+        'theta1': float(position.theta1),
+        'theta2': float(position.theta2),
+        'theta3': float(position.theta3)
+    })
+
+@app.route('/positions/<int:id>', methods=['PUT'])
+def update_position(id):
+    data = request.get_json()
+    position = Position.query.get_or_404(id)
+    position.x = data['x']
+    position.y = data['y']
+    position.z = data['z']
+    position.theta1 = data['theta1']
+    position.theta2 = data['theta2']
+    position.theta3 = data['theta3']
+    db.session.commit()
+    return jsonify({'message': 'Position updated'})
+
+@app.route('/positions/<int:id>', methods=['DELETE'])
+def delete_position(id):
+    position = Position.query.get_or_404(id)
+    db.session.delete(position)
+    db.session.commit()
+    return jsonify({'message': 'Position deleted'})
 
 
 ##
@@ -101,5 +220,7 @@ def start_all_threads():
     print('started all threads...')
 
 if __name__ == '__main__':
+    with app.app_context():
+        create_tables()
     start_all_threads()
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
