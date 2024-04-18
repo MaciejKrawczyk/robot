@@ -67,7 +67,37 @@
     --ring: 212.7 26.8% 83.9%;
   }
 }
- 
+
+::-webkit-scrollbar {
+  width: 5px; /* or less, depending on the design */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2); /* adjust opacity as needed */
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ccc; /* Color similar to the background */
+  border-radius: 2px; /* Optional: rounded corners */
+}
+::-webkit-scrollbar-track {
+  background: transparent; /* Avoids visual heaviness */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #b3b3b3; /* Lighter or darker shade when hovered */
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: #999; /* Even more distinct color when active */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #f0f0f0; /* Pick a color that matches the site's palette */
+}
+
 @layer base {
   * {
     @apply border-border;

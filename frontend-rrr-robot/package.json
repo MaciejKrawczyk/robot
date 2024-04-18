@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vee-validate/zod": "^4.12.6",
     "@vueuse/core": "^10.9.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -17,7 +18,9 @@
     "socket.io-client": "^4.7.5",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
-    "vue": "^3.4.21"
+    "vee-validate": "^4.12.6",
+    "vue": "^3.4.21",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.12.5",
