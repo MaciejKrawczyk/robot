@@ -1,14 +1,16 @@
 from flask import Flask, jsonify, request
 import time
 from flask_socketio import SocketIO
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from RRRRobotAPI2 import RobotAPI
 from threads.MotorMonitoringThread import MotorMonitoringThread
 from threads.MotorThread import MotorThread
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key_here'
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -40,8 +42,7 @@ motor_monitoring_thread = MotorMonitoringThread(
 
 class Command(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    body = db.Column(db.String(80), nullable=False)
+    code = db.Column(db.String(10000000), nullable=False)
     
 class Position(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -52,43 +53,26 @@ class Position(db.Model):
     theta2 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
     theta3 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
 
-@app.route('/commands', methods=['POST'])
-def create_command():
-    data = request.get_json()
-    command = Command(name=data['name'], body=data['body'] )
-    db.session.add(command)
-    db.session.commit()
-    return jsonify({'message': 'Command created'}), 201
-
-@app.route('/commands', methods=['GET'])
-def get_commands():
-    commands = Command.query.all()
-    return jsonify([{'id': command.id, 'name': command.name, 'body': command.body} for command in commands])
-
 @app.route('/commands/<int:id>', methods=['GET'])
+@cross_origin()
 def get_command(id):
     command = Command.query.get_or_404(id)
-    return jsonify({'id': command.id, 'name': command.name, 'body': command.body})
+    return jsonify({'id': command.id, 'code': command.code})
 
 @app.route('/commands/<int:id>', methods=['PUT'])
+@cross_origin()
 def update_command(id):
     data = request.get_json()
     command = Command.query.get_or_404(id)
-    command.name = data['name']
-    command.body = data['body']
+    command.code = json.dumps(data['code'])
     db.session.commit()
     return jsonify({'message': 'Command updated'})
 
-@app.route('/commands/<int:id>', methods=['DELETE'])
-def delete_command(id):
-    command = Command.query.get_or_404(id)
-    db.session.delete(command)
-    db.session.commit()
-    return jsonify({'message': 'Command deleted'})
-
 @app.route('/positions', methods=['POST'])
+@cross_origin()
 def create_position():
     data = request.get_json()
+    print(data)
     position = Position(
         x=data['x'],
         y=data['y'],
@@ -102,6 +86,7 @@ def create_position():
     return jsonify({'message': 'Position created'}), 201
 
 @app.route('/positions', methods=['GET'])
+@cross_origin()
 def get_positions():
     positions = Position.query.all()
     return jsonify([{
@@ -115,6 +100,7 @@ def get_positions():
     } for pos in positions])
 
 @app.route('/positions/<int:id>', methods=['GET'])
+@cross_origin()
 def get_position(id):
     position = Position.query.get_or_404(id)
     return jsonify({
@@ -128,6 +114,7 @@ def get_position(id):
     })
 
 @app.route('/positions/<int:id>', methods=['PUT'])
+@cross_origin()
 def update_position(id):
     data = request.get_json()
     position = Position.query.get_or_404(id)
@@ -141,6 +128,7 @@ def update_position(id):
     return jsonify({'message': 'Position updated'})
 
 @app.route('/positions/<int:id>', methods=['DELETE'])
+@cross_origin()
 def delete_position(id):
     position = Position.query.get_or_404(id)
     db.session.delete(position)
@@ -220,7 +208,12 @@ def start_all_threads():
     print('started all threads...')
 
 if __name__ == '__main__':
+    
     with app.app_context():
         create_tables()
+        program = Command(code='[]')
+        db.session.add(program)
+        db.session.commit()
+        
     start_all_threads()
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
