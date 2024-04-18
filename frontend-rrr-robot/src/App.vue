@@ -54,7 +54,6 @@
           <h2 class="font-bold text-4xl pt-4 pb-4">Program</h2>
 
           <Form v-slot="{setValues}" @submit="(values) => saveCodeToDB(values)">
-<!--            {console.log(JSON.stringify(values, null, 2))}-->
             <div
                 v-for="(command, index) in code"
                 :key="command.id"
@@ -63,7 +62,7 @@
 
               <FormField class="w-10/12" v-slot="{componentField}" :name="`name-${command.id}`">
                 <FormItem class="w-full">
-                  <Select class="w-full" v-model="command.name" v-bind="componentField">
+                  <Select class="w-full" v-model="command.name" v-bind="componentField" :default-value="command.name">
                     <SelectTrigger>
                       <SelectValue placeholder="Select command"/>
                     </SelectTrigger>
@@ -87,7 +86,7 @@
                          :name="`body-${command.id}`">
                 <FormItem class="w-full">
 
-                  <Select class="w-full" v-bind="componentField">
+                  <Select class="w-full" v-bind="componentField" :default-value="command.body">
                     <SelectTrigger>
                       <SelectValue placeholder="Select position"/>
                     </SelectTrigger>
@@ -108,7 +107,7 @@
               <FormField class="w-10/12" v-if="command.name === 'sleep'" v-slot="{componentField}"
                          :name="`body-${command.id}`">
                 <FormItem class="w-full">
-                  <Select class="w-full" v-bind="componentField">
+                  <Select class="w-full" v-bind="componentField" :default-value="command.body">
                     <SelectTrigger>
                       <SelectValue placeholder="Select time"/>
                     </SelectTrigger>
@@ -130,19 +129,19 @@
               </Button>
             </div>
 
-            <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px]" @click.prevent="addCommand">
-              <Plus/>
-            </Button>
-
-            <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px] ml-5">
-              <Play/>
-            </Button>
-
-            <Button type="submit" class="mt-5 mb-5 rounded-full w-[80px] h-[80px] ml-5">
+            <Button type="submit" class="rounded-full w-[80px] h-[80px] mt-5" variant="outline">
               <Save/>
             </Button>
 
+            <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px] ml-5" @click.prevent="addCommand" variant="outline">
+              <Plus/>
+            </Button>
+
           </Form>
+
+          <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px]">
+            <Play/>
+          </Button>
 
         </TabsContent>
 
@@ -340,6 +339,10 @@ const saveCodeToDB = async (values: { [key: string]: string }) => {
     // const responseData = await response.json()
     // code.value = JSON.parse(responseData.code)
     // console.log(code.value)
+    toast({
+      title: 'Success',
+      description: 'Program saved! Click RUN'
+    })
 
   } catch (e) {
     toast({
