@@ -169,11 +169,6 @@ def handle_command(command_object):
     print(f'received command: {command_object}')
 
 
-
-##
-## rest
-##
-
 @app.route('/exec-program', methods=['POST'])
 def exec_program():
     
