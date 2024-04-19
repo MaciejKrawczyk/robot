@@ -53,6 +53,47 @@ class Position(db.Model):
     theta2 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
     theta3 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
 
+
+
+@app.route('/run', methods=['POST'])
+@cross_origin()
+def run():
+
+    code = json.loads(Command.query.get_or_404(1).code)
+    
+    def get_position_by_id(id):
+        position = Position.query.get(id)
+        return {
+            'theta1': float(position.theta1),
+            'theta2': float(position.theta2), 
+            'theta3': float(position.theta3)
+            }
+    
+    current_position = request.get_json()
+    
+    movements = []
+    sleeps = []
+    
+    movement = []
+    movement.append(current_position)
+    
+    
+    for command in code:
+        if command['name'] == 'move_to':
+            position = get_position_by_id(int(command['body']))
+            movement.append(position)
+        if command['name'] == 'sleep':
+            movements.append(movement)
+            movement = []
+            movement.append(movements[-1][-1])
+            sleeps.append(int(command['body']))
+    movements.append(movement)
+
+
+    return {'movements': movements, 'sleeps': sleeps}
+
+
+
 @app.route('/commands/<int:id>', methods=['GET'])
 @cross_origin()
 def get_command(id):
