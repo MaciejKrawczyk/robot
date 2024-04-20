@@ -1,6 +1,17 @@
 import math
 
-def forward_kinematics(theta1: float, theta2: float, theta3: float, l1, l2, l3):
+
+def degrees_to_radians(degrees):
+    radians = degrees * (math.pi / 180)
+    return radians
+
+
+def radians_to_degrees(radians):
+    degrees = radians * (180 / math.pi)
+    return degrees
+
+
+def forward_kinematics(theta1: float, theta2: float, theta3: float, l1=1, l2=1, l3=1):
     """
     wg mojej implementacji
     thetas not in degrees, in radians!!!!
@@ -23,7 +34,7 @@ def forward_kinematics(theta1: float, theta2: float, theta3: float, l1, l2, l3):
 
     return {"x": x, "y": y, "z": z}
 
-def inverse_kinematics3(x, y, z, l1, l2, l3):
+def inverse_kinematics3(x, y, z, l1=1, l2=1, l3=1):
         """
         elbow down
         wg filmiku z yt https://www.youtube.com/watch?v=Jj5pqbQWKuE CORRECT!!!!!
@@ -42,10 +53,10 @@ def inverse_kinematics3(x, y, z, l1, l2, l3):
         fi3 = math.acos((r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2)) 
         theta3 = fi3 - math.pi 
 
-        angles = {"theta1": theta1, "theta2": theta2, "theta3": theta3}
+        angles = {"theta1": radians_to_degrees(theta1), "theta2": radians_to_degrees(theta2), "theta3": radians_to_degrees(theta3)}
         return angles
     
     
-def degrees_to_radians(degrees):
-    radians = degrees * (math.pi / 180)
-    return radians
+angles = inverse_kinematics3(0,0,3,1,1,1)
+# position = forward_kinematics(0, degrees_to_radians(90), 0, 1,1,1)
+print(angles)

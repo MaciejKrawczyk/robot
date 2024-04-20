@@ -7,6 +7,9 @@ from threads.MotorMonitoringThread import MotorMonitoringThread
 from threads.MotorThread import MotorThread
 from flask_sqlalchemy import SQLAlchemy
 import json
+import numpy as np
+from utils import add_points, bezier, calculate_velocity, plot_positions, plot_velocity, plot_velocity_with_calculated_velocitites, get_filename_datetime, modify_curve
+from kinematics_utils import inverse_kinematics3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key_here'
@@ -54,6 +57,68 @@ class Position(db.Model):
     theta3 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
 
 
+def transform_to_numpy(points):
+    # Extract x, y, z coordinates into separate lists
+    x_coords = [point['x'] for point in points]
+    y_coords = [point['y'] for point in points]
+    z_coords = [point['z'] for point in points]
+    
+    # Stack these lists vertically into a NumPy array
+    numpy_array = np.array([x_coords, y_coords, z_coords])
+    
+    return numpy_array
+
+
+def calculate_run(movements):
+    
+    cnt = 0.5
+    step = 0.01
+    
+    run = {}
+    for movement_id, movement in enumerate(movements):
+        
+        if not isinstance(movement, dict):
+        
+            run[movement_id] = {'vx': [], 'vy': [], 'vz': []}
+            
+            numpy_notation_movement_list = transform_to_numpy(movement)
+            # print(f'calculating points, cnt = {cnt}')
+            X, Y, Z = add_points(numpy_notation_movement_list, cnt)
+            # print(f'calculating trajectory, step = {step}s')
+            # x_b, y_b, z_b = bezier(X, Y, Z, step)
+            x, y, z, theta1, theta2, theta3 = bezier(X, Y, Z, step)
+            # print(x_b)
+            # x, y, z = modify_curve(x_b, y_b, z_b, inverse_kinematics3)  #TODO need to be changed to theta1, theta2, theta3
+            # print(f'calculating velocities')
+            vx, vy, vz = calculate_velocity(theta1, theta2, theta3, step)
+            # print(f'generating graphs')
+            total_time = len(x) * step
+            plot_positions(
+                theta1,theta2,theta3,
+                total_time,
+                f'{get_filename_datetime()}_movement_{movement_id}_position_over_time_calculated'
+            )
+            plot_velocity_with_calculated_velocitites(
+                x, vx, vy, vz,
+                step, 
+                f'{get_filename_datetime()}_movement_{movement_id}_velocity_over_time_calculated'
+            )
+
+            run[movement_id]['vx'] = vx
+            run[movement_id]['vy'] = vy
+            run[movement_id]['vz'] = vz
+            
+        else:
+            run[movement_id] = {'sleep': movement['sleep']}
+    
+    print(run)
+    return run
+
+
+# def run_movement_using_velocities(velocities):
+#     motor1_controller.run_using_velocities_array(velocities[0]['vx'])
+#     motor3_controller.run_using_velocities_array(velocities[0]['vz'])
+
 
 @app.route('/run', methods=['POST'])
 @cross_origin()
@@ -64,9 +129,9 @@ def run():
     def get_position_by_id(id):
         position = Position.query.get(id)
         return {
-            'theta1': float(position.theta1),
-            'theta2': float(position.theta2), 
-            'theta3': float(position.theta3)
+            'x': float(position.x),
+            'y': float(position.y), 
+            'z': float(position.z)
             }
     
     current_position = request.get_json()
@@ -87,11 +152,25 @@ def run():
             movement = []
             movement.append(movements[-1][-1])
             sleeps.append(int(command['body']))
+            movements.append({'sleep': int(command['body'])})
     movements.append(movement)
 
+    print(movements)
+
+    run = calculate_run(movements)
+    # run_movement_using_velocities(velocities)
+    
+    for movement_id, action in run.items():
+        if action.get('sleep') is None:
+            motor3_thread.send_command({'body': action['vz'].tolist(), 'name': 'move_velocities'})
+            motor1_thread.send_command({'body': action['vx'].tolist(), 'name': 'move_velocities'})
+            # print('sent move_velocity')
+        else:
+            motor3_thread.send_command({'name': 'sleep', 'body': int(action['sleep'])})
+            motor1_thread.send_command({'name': 'sleep', 'body': int(action['sleep'])})
+            # print('sent sleep')
 
     return {'movements': movements, 'sleeps': sleeps}
-
 
 
 @app.route('/commands/<int:id>', methods=['GET'])
@@ -252,4 +331,4 @@ if __name__ == '__main__':
         db.session.commit()
         
     start_all_threads()
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000, use_reloader=False)

@@ -31,7 +31,7 @@ class MotorMonitoringThread:
             angles_as_string = self.get_angles()
             end_effector_position = forward_kinematics(
                 degrees_to_radians(angles_as_string['theta1']),
-                0,  # Assuming 'theta2' is zero as per your current code.
+                degrees_to_radians(90),  # Assuming 'theta2' is zero as per your current code.
                 degrees_to_radians(angles_as_string['theta3']),
                 1, 1, 1
             )
@@ -39,7 +39,7 @@ class MotorMonitoringThread:
             # Combine the angles and position data into one dictionary
             final_data = {
                 'theta1': angles_as_string['theta1'],
-                'theta2': 0,  # 'theta2' is hard-coded as zero in this context.
+                'theta2': 90,  # 'theta2' is hard-coded as zero in this context.
                 'theta3': angles_as_string['theta3'],
                 'x': end_effector_position['x'],
                 'y': end_effector_position['y'],

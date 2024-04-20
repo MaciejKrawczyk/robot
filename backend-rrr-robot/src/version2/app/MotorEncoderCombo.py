@@ -4,8 +4,15 @@ import RPi.GPIO as GPIO
 PULSES_PER_REVOLUTION = 1220
 
 class MotorEncoderCombo:
-    def __init__(self, input_plus_pin, input_minus_pin, output_plus_pin, output_minus_pin,
-                 pulses_per_revolution=PULSES_PER_REVOLUTION):
+    def __init__(
+        self, 
+        input_plus_pin,
+        input_minus_pin, 
+        output_plus_pin,
+        output_minus_pin,
+        starting_angle = 0,
+        pulses_per_revolution=PULSES_PER_REVOLUTION
+        ):
         self.output_plus_pin = output_plus_pin
         self.output_minus_pin = output_minus_pin
         self.input_plus_pin = input_plus_pin

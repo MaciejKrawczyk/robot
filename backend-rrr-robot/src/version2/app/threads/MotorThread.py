@@ -20,6 +20,15 @@ class MotorThread:
             self.motor_controller.run('plus')
         elif command == f'{name}-':
             self.motor_controller.run('minus')
+        elif 'move_velocities' in command['name']: 
+            self.motor_controller.run_using_velocities_array(command['body'], motor_id=self.id)
+        elif 'sleep' in command['name']:
+            seconds = int(command['body'])
+            start_time = time.time()  # Start time for reference
+            print(f'[MOTOR{self.id} SLEEP STARTED] Seconds: {seconds}')
+            # self.motor_controller.sleep(int(command['body']), motor_id=self.id)
+            time.sleep(seconds)
+            print(f'[MOTOR{self.id} SLEEP FINISHED] Real break time: {time.time() - start_time:.2f}')
         # here should be advanced logic for handling commands
 
     def thread_function(self):
