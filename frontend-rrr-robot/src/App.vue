@@ -242,33 +242,71 @@
               <DrawerDescription>You will be able to start program shortly</DrawerDescription>
             </DrawerHeader>
 
-            <div class="w-full flex flex-col gap-3 items-start">
+            <div class="w-full flex flex-col gap-3 items-start overflow-auto">
 
-              <div class="flex justify-center items-center font-bold">
-                <DoneSmall />
-                <p>Calculating points, cnt = 0.5</p>
+
+              <div class="w-full flex flex-col gap-3 items-start">
+
+                <p>movement 1</p>
+
+                <div class="flex justify-center items-center font-bold">
+                  <DoneSmall/>
+                  <p>Calculating points, cnt = 0.5</p>
+                </div>
+
+                <div class="flex justify-center items-center font-bold">
+                  <LoadingSmall/>
+                  <p>Calculating trajectory, step = 0.01s</p>
+                </div>
+
+                <div class="flex justify-center items-center font-bold">
+                  <LoadingSmall/>
+                  <p>Calculating velocities</p>
+                </div>
+
+                <div class="flex justify-center items-center font-bold">
+                  <LoadingSmall/>
+                  <p>Generating graphs</p>
+                </div>
+
               </div>
 
-              <div class="flex justify-center items-center font-bold">
-                <LoadingSmall />
-                <p>Calculating trajectory, step = 0.01s</p>
-              </div>
+              <div class="w-full flex flex-col gap-3 items-start">
 
-              <div class="flex justify-center items-center font-bold">
-                <LoadingSmall />
-                <p>Calculating velocities</p>
+                <p>movement 2</p>
+
+                <div class="flex justify-center items-center font-bold">
+                  <DoneSmall/>
+                  <p>Calculating points, cnt = 0.5</p>
+                </div>
+
+                <div class="flex justify-center items-center font-bold">
+                  <LoadingSmall/>
+                  <p>Calculating trajectory, step = 0.01s</p>
+                </div>
+
+                <div class="flex justify-center items-center font-bold">
+                  <LoadingSmall/>
+                  <p>Calculating velocities</p>
+                </div>
+
+                <div class="flex justify-center items-center font-bold">
+                  <LoadingSmall/>
+                  <p>Generating graphs</p>
+                </div>
+
               </div>
 
             </div>
 
-<!--            <DrawerFooter>-->
-<!--              <Button>Submit</Button>-->
-<!--              <DrawerClose as-child>-->
-<!--                <Button variant="outline">-->
-<!--                  Cancel-->
-<!--                </Button>-->
-<!--              </DrawerClose>-->
-<!--            </DrawerFooter>-->
+            <!--            <DrawerFooter>-->
+            <!--              <Button>Submit</Button>-->
+            <!--              <DrawerClose as-child>-->
+            <!--                <Button variant="outline">-->
+            <!--                  Cancel-->
+            <!--                </Button>-->
+            <!--              </DrawerClose>-->
+            <!--            </DrawerFooter>-->
           </div>
         </DrawerContent>
 
@@ -388,6 +426,8 @@ const saveCodeToDB = async (values: { [key: string]: string }) => {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({code: code})
     })
+
+    console.log(JSON.stringify({code: code}))
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
