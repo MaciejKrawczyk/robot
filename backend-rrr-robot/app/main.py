@@ -2,28 +2,26 @@ from flask import Flask, jsonify, request
 import time
 from flask_socketio import SocketIO
 from flask_cors import CORS, cross_origin
+# from RRRRobotAPI2 import RobotAPI
 from RRRRobotAPI2 import RobotAPI
 from threads.MotorMonitoringThread import MotorMonitoringThread
 from threads.MotorThread import MotorThread
 from flask_sqlalchemy import SQLAlchemy
 import json
 import numpy as np
-from utils import add_points, bezier, calculate_velocity, plot_positions, plot_velocity, plot_velocity_with_calculated_velocitites, get_filename_datetime, modify_curve, plot_angles, shortest_path
-from kinematics_utils import inverse_kinematics3
+from routes.routes import api
+from services import position, robot_code
+from utils.helpers import calculate_velocity, get_filename_datetime
+from utils.plot_generation import plot_angles, plot_positions, plot_velocity_with_calculated_velocitites
+from utils.bezier_trajectory import bezier, add_points
+from app import create_app
+from models import position
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret_key_here'
-app.config['CORS_HEADERS'] = 'Content-Type'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-socketio = SocketIO(app, cors_allowed_origins="*")
-CORS(app)
-db = SQLAlchemy(app)
 
-def create_tables():
-    db.create_all()
+app, socketio = create_app()
 
 robotAPI = RobotAPI()
+app.register_blueprint(api)
 
 motor1_controller = robotAPI.motor1_controller
 # motor2_controller = robotAPI.motor2_controller  # Uncomment if motor2 is used
@@ -39,26 +37,10 @@ motor_monitoring_thread = MotorMonitoringThread(
     motor3_controller=motor3_controller
 )
 
-##
-## crud
-##
-
-class Command(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(10000000), nullable=False)
-    
-class Position(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    x = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    y = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    z = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    theta1 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    theta2 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    theta3 = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-
 
 def transform_to_numpy(points):
     # Extract x, y, z coordinates into separate lists
+    print(points)
     x_coords = [point['x'] for point in points]
     y_coords = [point['y'] for point in points]
     z_coords = [point['z'] for point in points]
@@ -127,19 +109,19 @@ def calculate_run(movements):
     return run
 
 
-@app.route('/run', methods=['POST'])
+@app.route('/api/run', methods=['POST'])
 @cross_origin()
 def run():
 
-    code = json.loads(Command.query.get_or_404(1).code)
+    code = json.loads(robot_code.get_robot_code(1).code)
     
     def get_position_by_id(id):
-        position = Position.query.get(id)
+        pos = position.Position.query.get(id)
         return {
-            'x': float(position.x),
-            'y': float(position.y), 
-            'z': float(position.z)
-            }
+            'x': float(pos.x),
+            'y': float(pos.y), 
+            'z': float(pos.z)
+        }
     
     current_position = request.get_json()
     
@@ -148,12 +130,15 @@ def run():
     
     movement = []
     movement.append(current_position)
-    
+    print(code)
     
     for command in code:
         if command['name'] == 'move_to':
-            position = get_position_by_id(int(command['body']))
-            movement.append(position)
+            pos = get_position_by_id(int(command['body']))
+            
+            # pos = position.get_position(int(command['body']))
+            
+            movement.append(pos)
         if command['name'] == 'sleep':
             movements.append(movement)
             movement = []
@@ -178,89 +163,6 @@ def run():
             # print('sent sleep')
 
     return {'movements': movements, 'sleeps': sleeps}
-
-
-@app.route('/commands/<int:id>', methods=['GET'])
-@cross_origin()
-def get_command(id):
-    command = Command.query.get_or_404(id)
-    return jsonify({'id': command.id, 'code': command.code})
-
-@app.route('/commands/<int:id>', methods=['PUT'])
-@cross_origin()
-def update_command(id):
-    data = request.get_json()
-    command = Command.query.get_or_404(id)
-    command.code = json.dumps(data['code'])
-    db.session.commit()
-    return jsonify({'message': 'Command updated'})
-
-@app.route('/positions', methods=['POST'])
-@cross_origin()
-def create_position():
-    data = request.get_json()
-    print(data)
-    position = Position(
-        x=data['x'],
-        y=data['y'],
-        z=data['z'],
-        theta1=data['theta1'],
-        theta2=data['theta2'],
-        theta3=data['theta3']
-    )
-    db.session.add(position)
-    db.session.commit()
-    return jsonify({'message': 'Position created'}), 201
-
-@app.route('/positions', methods=['GET'])
-@cross_origin()
-def get_positions():
-    positions = Position.query.all()
-    return jsonify([{
-        'id': pos.id,
-        'x': float(pos.x),
-        'y': float(pos.y),
-        'z': float(pos.z),
-        'theta1': float(pos.theta1),
-        'theta2': float(pos.theta2),
-        'theta3': float(pos.theta3)
-    } for pos in positions])
-
-@app.route('/positions/<int:id>', methods=['GET'])
-@cross_origin()
-def get_position(id):
-    position = Position.query.get_or_404(id)
-    return jsonify({
-        'id': position.id,
-        'x': float(position.x),
-        'y': float(position.y),
-        'z': float(position.z),
-        'theta1': float(position.theta1),
-        'theta2': float(position.theta2),
-        'theta3': float(position.theta3)
-    })
-
-@app.route('/positions/<int:id>', methods=['PUT'])
-@cross_origin()
-def update_position(id):
-    data = request.get_json()
-    position = Position.query.get_or_404(id)
-    position.x = data['x']
-    position.y = data['y']
-    position.z = data['z']
-    position.theta1 = data['theta1']
-    position.theta2 = data['theta2']
-    position.theta3 = data['theta3']
-    db.session.commit()
-    return jsonify({'message': 'Position updated'})
-
-@app.route('/positions/<int:id>', methods=['DELETE'])
-@cross_origin()
-def delete_position(id):
-    position = Position.query.get_or_404(id)
-    db.session.delete(position)
-    db.session.commit()
-    return jsonify({'message': 'Position deleted'})
 
 
 ##
@@ -296,7 +198,7 @@ def handle_command(command_object):
     print(f'received command: {command_object}')
 
 
-@app.route('/exec-program', methods=['POST'])
+@app.route('/api/exec-program', methods=['POST'])
 def exec_program():
     
     if not request.is_json:
@@ -329,13 +231,14 @@ def start_all_threads():
     motor_monitoring_thread.start_thread()
     print('started all threads...')
 
+
 if __name__ == '__main__':
     
-    with app.app_context():
-        create_tables()
-        program = Command(code='[]')
-        db.session.add(program)
-        db.session.commit()
+    # with app.app_context():
+        # create_tables()
+        # program = Command(code='[]')
+        # db.session.add(program)
+        # db.session.commit()
         
     start_all_threads()
     socketio.run(app, debug=True, host='0.0.0.0', port=5000, use_reloader=False)

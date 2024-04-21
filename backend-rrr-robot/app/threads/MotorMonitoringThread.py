@@ -2,7 +2,9 @@ from MotorController import MotorController
 import threading
 from flask_socketio import SocketIO
 import time
-from kinematics_utils import forward_kinematics, degrees_to_radians
+from utils.helpers import degrees_to_radians
+from utils.kinematics import forward_kinematics
+
 
 class MotorMonitoringThread:
     def __init__(

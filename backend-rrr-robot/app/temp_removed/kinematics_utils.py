@@ -57,6 +57,6 @@ def inverse_kinematics3(x, y, z, l1=1, l2=1, l3=1):
         return angles
     
     
-angles = inverse_kinematics3(0,0,3,1,1,1)
-# position = forward_kinematics(0, degrees_to_radians(90), 0, 1,1,1)
-print(angles)
+# angles = inverse_kinematics3(0,0,3,1,1,1)
+# # position = forward_kinematics(0, degrees_to_radians(90), 0, 1,1,1)
+# print(angles)

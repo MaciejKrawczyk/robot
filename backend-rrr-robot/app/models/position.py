@@ -1,7 +1,7 @@
-from . import db
+from app import db
 
 class Position(db.Model):
-    __tablename__ = 'position'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     x = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
     y = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
