@@ -419,7 +419,7 @@ const addCommand = () => {
 
 const saveCodeToDB = async (values: { [key: string]: string }) => {
   const code = parseCommandsToCode(values)
-  const url = 'http://localhost:5000/commands/1'
+  const url = 'http://localhost:5000/api/commands/1'
   try {
     const response = await fetch(url, {
       method: "PUT",
@@ -454,7 +454,7 @@ const removeCommand = (id: number) => {
 
 const fetchCodeFromDB = async () => {
   // loading.value = true
-  const url = 'http://localhost:5000/commands/1'
+  const url = 'http://localhost:5000/api/commands/1'
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -481,7 +481,7 @@ const fetchCodeFromDB = async () => {
 
 const fetchPositionsFromDB = async () => {
   loading.value = true
-  const url = 'http://localhost:5000/positions'
+  const url = 'http://localhost:5000/api/positions'
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -507,7 +507,7 @@ const fetchPositionsFromDB = async () => {
 }
 
 const savePositionToDB = async (position: Position) => {
-  const url = 'http://localhost:5000/positions'
+  const url = 'http://localhost:5000/api/positions'
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -531,7 +531,7 @@ const savePositionToDB = async (position: Position) => {
 }
 
 const saveCommandToDB = async (command: Command) => {
-  const url = 'http://localhost:5000/commands'
+  const url = 'http://localhost:5000/api/commands'
   try {
     const response = await fetch(url, {
       method: 'POST',
