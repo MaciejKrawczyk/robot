@@ -1,0 +1,1 @@
+export PYTHONPATH=/home/maciek/Desktop/robot/backend-rrr-robot

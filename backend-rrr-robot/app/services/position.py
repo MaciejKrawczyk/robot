@@ -24,4 +24,10 @@ def get_position(id: int) -> Position:
     position = Position.query.get_or_404(id)
     return position
 
-
+def delete_position(id: int, db_dependency) -> None:
+    position = get_position(id)
+    try:
+        db_dependency.session.delete(position)
+        db_dependency.session.commit()
+    except:
+       raise ValueError('not found') 

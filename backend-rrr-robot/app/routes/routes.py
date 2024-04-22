@@ -35,7 +35,13 @@ def get_positions():
 @api.route('/positions/<int:id>', methods=['GET'])
 @cross_origin()
 def get_position(id):
-    return get_position(id)
+    return position.get_position(id)
+
+@api.route('/positions/<int:id>', methods=['DELETE'])
+@cross_origin()
+def delete_position(id):
+    id = int(id)
+    return position.delete_position(id)
 
 
 @api.route('api/exec-program', methods=['POST'])

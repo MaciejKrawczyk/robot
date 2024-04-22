@@ -12,7 +12,7 @@ import numpy as np
 from routes.routes import api
 from services import position, robot_code
 from utils.helpers import calculate_velocity, get_filename_datetime
-from utils.plot_generation import plot_angles, plot_positions, plot_velocity_with_calculated_velocitites
+from utils.plot_generation import plot_angles, plot_positions, plot_velocity_with_calculated_velocitites, plot_angle_velocity, plot_position_velocity
 from utils.bezier_trajectory import bezier, add_points
 from app import create_app
 from models import position
@@ -89,10 +89,10 @@ def calculate_run(movements):
                 total_time,
                 f'{get_filename_datetime()}_movement_{movement_id}_position_over_time_calculated'
             )
-            plot_velocity_with_calculated_velocitites(
-                x, vtheta1, vtheta2, vtheta3,
+            plot_angle_velocity(
+                vtheta1, vtheta2, vtheta3,
                 step, 
-                f'{get_filename_datetime()}_movement_{movement_id}_velocity_over_time_calculated'
+                f'{get_filename_datetime()}_movement_{movement_id}_angle_velocity_over_time_calculated'
             )
 
             run[movement_id]['velocities']['vtheta1'] = vtheta1
@@ -115,26 +115,48 @@ def run():
 
     code = json.loads(robot_code.get_robot_code(1).code)
     
-    def get_position_by_id(id):
+    # def get_position_by_id(id):
+    #     pos = position.Position.query.get(id)
+    #     return {
+    #         'x': float(pos.x),
+    #         'y': float(pos.y), 
+    #         'z': float(pos.z)
+    #     }
+    
+    # def get_angles_by_id(id):
+    #     pos = position.Position.query.get(id)
+    #     return {
+    #         'theta1': float(pos.theta1),
+    #         'theta2': float(pos.theta2), 
+    #         'theta3': float(pos.theta3)
+    #     }
+    
+    def get_full_position_by_id(id):
         pos = position.Position.query.get(id)
         return {
+            'theta1': float(pos.theta1),
+            'theta2': float(pos.theta2), 
+            'theta3': float(pos.theta3),
             'x': float(pos.x),
             'y': float(pos.y), 
             'z': float(pos.z)
         }
     
-    current_position = request.get_json()
+    # current_position = request.get_json()
+    
+    current_full_position = motor_monitoring_thread.get_position_and_angles2()
+    # current_position_angles = motor_monitoring_thread.get_angles()
     
     movements = []
     sleeps = []
     
     movement = []
-    movement.append(current_position)
+    movement.append(current_full_position)
     print(code)
     
     for command in code:
         if command['name'] == 'move_to':
-            pos = get_position_by_id(int(command['body']))
+            pos = get_full_position_by_id(int(command['body']))
             
             # pos = position.get_position(int(command['body']))
             

@@ -2,7 +2,7 @@ import math
 from .helpers import radians_to_degrees
 
 
-def forward_kinematics(theta1: float, theta2: float, theta3: float, l1=1, l2=1, l3=1):
+def forward_kinematics(theta1: float, theta2: float, theta3: float, l1=14, l2=9, l3=9):
     """
     wg mojej implementacji
     thetas not in degrees, in radians!!!!
@@ -26,7 +26,7 @@ def forward_kinematics(theta1: float, theta2: float, theta3: float, l1=1, l2=1, 
     return {"x": x, "y": y, "z": z}
 
 
-def inverse_kinematics3(x, y, z, l1=1, l2=1, l3=1):
+def inverse_kinematics3(x, y, z, l1=14, l2=9, l3=9):
         """
         elbow down
         wg filmiku z yt https://www.youtube.com/watch?v=Jj5pqbQWKuE CORRECT!!!!!
@@ -47,3 +47,4 @@ def inverse_kinematics3(x, y, z, l1=1, l2=1, l3=1):
 
         angles = {"theta1": radians_to_degrees(theta1), "theta2": radians_to_degrees(theta2), "theta3": radians_to_degrees(theta3)}
         return angles
+    

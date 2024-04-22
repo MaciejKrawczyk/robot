@@ -46,3 +46,15 @@ def get_position(id:int):
         'theta2': float(fetched_position.theta2),
         'theta3': float(fetched_position.theta3)
     })
+
+
+def delete_position(id: int):
+    try:
+        position.delete_position(id, db_dependency)
+        return jsonify({
+            'message': 'successfully deleted'
+        }), 200
+    except:
+        return jsonify({
+            'message': 'not found'
+        }), 404

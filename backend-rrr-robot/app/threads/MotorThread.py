@@ -31,15 +31,14 @@ class MotorThread:
             print(f'[MOTOR{self.id} SLEEP FINISHED] Real break time: {time.time() - start_time:.2f}')
         # here should be advanced logic for handling commands
 
-    def thread_function(self):
-        socketio_instance = self.socketio_instance
+    def _thread_function(self):
         while True:
             command = self.command_queue.get()
             self._handle_command(command)
             time.sleep(0.1)
     
     def start_thread(self):
-        self.thread = threading.Thread(target=self.thread_function)
+        self.thread = threading.Thread(target=self._thread_function)
         self.thread.start()
         print('Motor thread started with ID:', self.id)
         
@@ -47,3 +46,7 @@ class MotorThread:
         command_json = json.dumps(command)
         commnad_obj = json.loads(command_json)
         self.command_queue.put(commnad_obj)
+        
+    def get_current_angle(self) -> float:
+        return self.motor_controller.get_current_angle()
+    
