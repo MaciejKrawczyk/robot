@@ -164,6 +164,7 @@
                   <TableHead>x</TableHead>
                   <TableHead>y</TableHead>
                   <TableHead>z</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -175,6 +176,7 @@
                   <TableCell>{{ position.x }}</TableCell>
                   <TableCell>{{ position.y }}</TableCell>
                   <TableCell>{{ position.z }}</TableCell>
+                  <TableCell><button @click.prevent="deletePositionFromDB(position.id)">remove</button></TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -442,6 +444,32 @@ const saveCodeToDB = async (values: { [key: string]: string }) => {
     toast({
       title: 'Oops',
       description: 'Failed to post code to db'
+    })
+  } finally {
+    // loading.value = false
+  }
+}
+
+const deletePositionFromDB = async (id: number) => {
+  const url = `http://localhost:5000/api/positions/${id}`
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: id
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    await fetchPositionsFromDB()
+    toast({
+      title: 'Success!',
+      description: 'Position deleted successfully'
+    })
+  } catch (e) {
+    toast({
+      title: 'Oops',
+      description: 'Failed fetching code from db'
     })
   } finally {
     // loading.value = false
