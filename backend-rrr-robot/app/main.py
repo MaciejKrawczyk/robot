@@ -12,7 +12,7 @@ import numpy as np
 from routes.routes import api
 from services import position, robot_code
 from utils.helpers import calculate_velocity, get_filename_datetime
-from utils.plot_generation import plot_angles, plot_positions, plot_velocity_with_calculated_velocitites, plot_angle_velocity, plot_position_velocity
+from utils.plot_generation import plot_angles, plot_positions, plot_velocity_with_calculated_velocitites, plot_angle_velocity, plot_position_velocity, plot_all_motor_data
 from utils.bezier_trajectory import bezier, add_points
 from app import create_app
 from models import position
@@ -53,19 +53,22 @@ def transform_to_numpy(points):
 
 def calculate_run(movements):
     
-    cnt = 0.5
+    cnt = 1
     step = 0.01
     
     run = {}
     for movement_id, movement in enumerate(movements):
         
         if not isinstance(movement, dict):
-        
+            
+            print(movement)
+            
             run[movement_id] = {'velocities': {'vtheta1': [], 'vtheta2': [], 'vtheta3': []}, 'angles': {'theta1': [], 'theta2': [], 'theta3': []}}
             
             numpy_notation_movement_list = transform_to_numpy(movement)
             # print(f'calculating points, cnt = {cnt}')
             X, Y, Z = add_points(numpy_notation_movement_list, cnt)
+            print(f'add_points, X: {X}, Y:{Y}, Z:{Z}')
             # print(f'calculating trajectory, step = {step}s')
             # x_b, y_b, z_b = bezier(X, Y, Z, step)
             
@@ -74,7 +77,7 @@ def calculate_run(movements):
             # x, y, z, theta1, theta2, theta3 = shortest_path(X, Y, Z, step)
             
             # print(x_b)
-            # x, y, z = modify_curve(x_b, y_b, z_b, inverse_kinematics3)  #TODO need to be changed to theta1, theta2, theta3
+            # x, y, z = modify_curve(x_b, y_b, z_b, inverse_kinematics3)
             # print(f'calculating velocities')
             vtheta1, vtheta2, vtheta3 = calculate_velocity(theta1, theta2, theta3, step)
             # print(f'generating graphs')
@@ -105,9 +108,15 @@ def calculate_run(movements):
         else:
             run[movement_id] = {'sleep': movement['sleep']}
     
-    print(run)
+    # print(run)
     return run
 
+
+@app.route('/api/plot', methods=['POST'])
+@cross_origin()
+def plot_motor_data():
+    plot_all_motor_data()
+    return jsonify({'message': 'done'})
 
 @app.route('/api/run', methods=['POST'])
 @cross_origin()
@@ -173,6 +182,8 @@ def run():
 
     run = calculate_run(movements)
     # run_movement_using_velocities(velocities)
+    
+    time.sleep(1)
     
     for movement_id, action in run.items():
         if action.get('sleep') is None:

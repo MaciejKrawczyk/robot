@@ -66,7 +66,7 @@ def add_points(points, calm):
     return x, y, z
 
 
-def inverse_kinematics_numpy(x, y, z, l1=1, l2=1, l3=1):
+def inverse_kinematics_numpy(x, y, z, l1=14, l2=9, l3=9):
     h = l1
     L1 = l2
     L2 = l3

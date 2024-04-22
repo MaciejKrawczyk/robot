@@ -3,6 +3,7 @@ import time
 # import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import datetime
+import os
 
 PULSES_PER_REVOLUTION = 1250
 
@@ -42,6 +43,137 @@ class MotorController:
         time.sleep(seconds) 
         print(f'[MOTOR{motor_id} SLEEP FINISHED] Real break time: {time.time() - start_time:.2f}')
 
+
+    def run_using_pid_control(self, target_angles, motor_id=''):
+        # Ensure directory exists
+        directory = 'motor_data'
+        os.makedirs(directory, exist_ok=True)
+        
+        print(f'[MOTOR{motor_id} MOVEMENT STARTED] Movement in progress...')
+        start_time = time.time()
+
+        times = []
+        actual_angles = []
+        target_angles_record = []
+        pid_outputs = []
+
+        # PID parameters
+        Kp = 9
+        Ki = 5
+        Kd = 0
+
+        # Initialize PID error terms
+        prev_error = 0
+        integral = 0
+
+        for target_angle in target_angles:
+            current_angle = self.motor.get_angle()
+            error = target_angle - current_angle
+
+            # Integral and derivative calculations
+            integral += error * 0.01
+            derivative = (error - prev_error) / 0.01
+            prev_error = error
+
+            # PID output calculation
+            pid_output = Kp * error + Ki * integral + Kd * derivative
+            pid_outputs.append(pid_output)
+
+            # Calculate direction and ensure speed is within 20 to 100%
+            direction = 'plus' if pid_output > 0 else 'minus'
+            speed_percentage = max(20, min(100, abs(pid_output)))
+
+            # Run the motor with the computed speed and direction
+            self.motor.run_motor(direction, speed_percentage)
+
+            # Record time and current angle
+            current_time = time.time() - start_time
+            times.append(current_time)
+            actual_angles.append(current_angle)
+            target_angles_record.append(target_angle)
+
+            # Small delay for PID computation pace
+            time.sleep(0.01)
+
+        # Stop the motor after finishing
+        self.motor.stop()
+        elapsed_time = time.time() - start_time
+        print(f"[MOTOR{motor_id} FINISHED MOVEMENT] Total runtime: {elapsed_time:.2f} seconds")
+
+        # Save data to a text file within the directory
+        filename = os.path.join(directory, f"{get_filename_datetime()}_motor{motor_id}_data.txt")
+        with open(filename, 'w') as file:
+            for time_point, actual_angle, target_angle, pid_output in zip(times, actual_angles, target_angles_record, pid_outputs):
+                file.write(f"{time_point},{actual_angle},{target_angle},{pid_output}\n")
+
+
+
+    def run_using_velocities_array_no_pid(self, velocities, target_angles, motor_id=''):
+        print(f'[MOTOR{motor_id} MOVEMENT STARTED] Movement in progress...')
+        start_time = time.time()
+
+        times = []
+        actual_angles = []
+        actual_velocities = []
+
+        for velocity in velocities:
+            try:
+                if velocity > 0:
+                    direction = 'plus'
+                else:
+                    direction = 'minus'
+
+                # Calculate speed percentage with a minimum of 20 and a maximum of 100
+                speed_percentage = max(20, min(100, abs(velocity)))
+
+                # Run the motor with the given speed
+                self.motor.run_motor(direction, speed_percentage)
+                actual_velocities.append(speed_percentage)
+
+                current_time = time.time() - start_time
+                current_angle = self.motor.get_angle()
+
+                # Record time and angle
+                times.append(current_time)
+                actual_angles.append(current_angle)
+
+                # Small delay to prevent hogging the CPU
+                time.sleep(0.01)
+
+            except Exception as e:
+                print(f"Error: {e}")
+                self.motor.stop()
+                break
+
+        # Stop the motor after finishing the velocity array
+        self.motor.stop()
+        elapsed_time = time.time() - start_time
+        print(f"[MOTOR{motor_id} FINISHED MOVEMENT] Total runtime: {elapsed_time:.2f} seconds")
+
+        # Plotting the motor angle over time with target angles
+        plt.figure(figsize=(10, 5))
+        plt.plot(times, actual_angles, label='Actual Motor Angle', marker='o')
+        plt.plot(times, target_angles, label='Target Motor Angle', linestyle='--')
+        plt.title(f'Motor{motor_id} Angle Over Time')
+        plt.xlabel('Time (seconds)')
+        plt.ylabel('Motor Angle (degrees)')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig(f"{get_filename_datetime()}_motor{motor_id}_angles.png")
+        plt.show()
+
+        # Plotting the commanded velocities over time
+        plt.figure(figsize=(10, 5))
+        plt.plot(times, actual_velocities, label='Commanded Velocities', marker='o')
+        plt.title(f'Motor{motor_id} Velocity Over Time')
+        plt.xlabel('Time (seconds)')
+        plt.ylabel('Velocity (%)')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig(f"{get_filename_datetime()}_motor{motor_id}_velocities.png")
+        plt.show()
+
+
     def run_using_velocities_array(self, velocities, target_angles, motor_id=''):
         print(f'[MOTOR{motor_id} MOVEMENT STARTED] Movement in progress...')
         start_time = time.time()
@@ -51,7 +183,9 @@ class MotorController:
         previous_error = 0
 
         times = []
-        angles = []
+        actual_angles = []
+        actual_velocities = []
+        measured_velocities = []
 
         for velocity, target_angle in zip(velocities, target_angles):
             try:
@@ -64,6 +198,7 @@ class MotorController:
 
                 # Run the motor at the start to set initial movement
                 self.motor.run_motor(direction, speed_percentage)
+                actual_velocities.append(speed_percentage)
 
                 current_time = time.time() - start_time
                 current_angle = self.motor.get_angle()
@@ -77,10 +212,11 @@ class MotorController:
                 # Adjust the motor speed based on PID output
                 adjusted_speed = max(0, min(100, abs(output)))
                 self.motor.run_motor(direction, adjusted_speed)
+                measured_velocities.append(adjusted_speed)
 
                 # Record time and angle
                 times.append(current_time)
-                angles.append(current_angle)
+                actual_angles.append(current_angle)
 
                 # Update previous error
                 previous_error = error
@@ -96,17 +232,33 @@ class MotorController:
         # Stop the motor after finishing the velocity array
         self.motor.stop()
         elapsed_time = time.time() - start_time
-        print(f"[MOTOR{motor_id} FINISHED MOVEMENT] Total runtime: {time.time() - start_time:.2f} seconds")
-        # Plotting the motor angle over time
+        print(f"[MOTOR{motor_id} FINISHED MOVEMENT] Total runtime: {elapsed_time:.2f} seconds")
+        
+        # Plotting the motor angle over time with target angles
         plt.figure(figsize=(10, 5))
-        plt.plot(times, angles, label='Motor Angle', marker='o')
+        plt.plot(times, actual_angles, label='Actual Motor Angle', marker='o')
+        plt.plot(times, target_angles, label='Target Motor Angle', linestyle='--')
         plt.title(f'Motor{motor_id} Angle Over Time')
         plt.xlabel('Time (seconds)')
         plt.ylabel('Motor Angle (degrees)')
         plt.grid(True)
         plt.legend()
-        plt.savefig(f"{get_filename_datetime()}_motor{motor_id}.png")
+        plt.savefig(f"{get_filename_datetime()}_motor{motor_id}_angles.png")
         plt.show()
+
+        # Plotting the actual vs adjusted velocities
+        plt.figure(figsize=(10, 5))
+        plt.plot(times, actual_velocities, label='Commanded Velocities', marker='o')
+        plt.plot(times, measured_velocities, label='Actual Velocities', linestyle='--')
+        plt.title(f'Motor{motor_id} Velocity Over Time')
+        plt.xlabel('Time (seconds)')
+        plt.ylabel('Velocity (%)')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig(f"{get_filename_datetime()}_motor{motor_id}_velocities.png")
+        plt.show()
+
+
 
     def move_to(self, angle, hold=False):
         current_angle = self.motor.get_angle()

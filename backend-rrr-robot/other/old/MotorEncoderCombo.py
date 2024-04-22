@@ -49,7 +49,7 @@ class MotorEncoderCombo:
             self.pwm_output_plus.start(0)
             self.pwm_output_minus.start(percent_of_power)
         else:
-            print("run_motor: invalid direction")
+            # print("run_motor: invalid direction")
             raise Exception("Invalid direction")
                 
     def stop(self):

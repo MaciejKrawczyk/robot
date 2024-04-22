@@ -11,6 +11,7 @@ class MotorEncoderCombo:
         output_plus_pin,
         output_minus_pin,
         starting_angle = 0,
+        is_minus_plus_swapped = False,
         pulses_per_revolution=PULSES_PER_REVOLUTION
         ):
         self.output_plus_pin = output_plus_pin
@@ -19,6 +20,7 @@ class MotorEncoderCombo:
         self.input_minus_pin = input_minus_pin
         self.pulses_per_revolution = pulses_per_revolution
         self._pulses = 0
+        self.is_minus_plus_swapped = is_minus_plus_swapped
         
         # GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.input_plus_pin, GPIO.IN)
@@ -47,17 +49,31 @@ class MotorEncoderCombo:
         pass
 
     def run_motor(self, direction, percent_of_power):
-        if direction == "plus":
-            # print("run_motor: plus")
-            self.pwm_output_minus.start(0)
-            self.pwm_output_plus.start(percent_of_power)
-        elif direction == "minus":
-            # print("run_motor: minus")
-            self.pwm_output_plus.start(0)
-            self.pwm_output_minus.start(percent_of_power)
+        if not self.is_minus_plus_swapped:
+            if direction == "plus":
+                # print("run_motor: plus")
+                self.pwm_output_minus.start(0)
+                self.pwm_output_plus.start(percent_of_power)
+            elif direction == "minus":
+                # print("run_motor: minus")
+                self.pwm_output_plus.start(0)
+                self.pwm_output_minus.start(percent_of_power)
+            else:
+                # print("run_motor: invalid direction")
+                raise Exception("Invalid direction")
         else:
-            print("run_motor: invalid direction")
-            raise Exception("Invalid direction")
+            if direction == "minus":
+                # print("run_motor: plus")
+                self.pwm_output_minus.start(0)
+                self.pwm_output_plus.start(percent_of_power)
+            elif direction == "plus":
+                # print("run_motor: minus")
+                self.pwm_output_plus.start(0)
+                self.pwm_output_minus.start(percent_of_power)
+            else:
+                # print("run_motor: invalid direction")
+                raise Exception("Invalid direction")
+                
                 
     def stop(self):
         """Stop the motor by setting both PWM outputs to 0% duty cycle."""

@@ -21,7 +21,8 @@ class MotorThread:
         elif command == f'{name}-':
             self.motor_controller.run('minus')
         elif 'move_velocities' in command['name']: 
-            self.motor_controller.run_using_velocities_array(command['body']['velocities'], command['body']['angles'], motor_id=self.id)
+            # self.motor_controller.run_using_velocities_array_no_pid(command['body']['velocities'], command['body']['angles'], motor_id=self.id)
+            self.motor_controller.run_using_pid_control(command['body']['angles'], motor_id=self.id)
         elif 'sleep' in command['name']:
             seconds = int(command['body'])
             start_time = time.time()  # Start time for reference

@@ -137,3 +137,43 @@ def plot_position_velocity(vx, vy, vz, step_size, file_name='velocity_over_time'
     plt.grid(True)  # Enable grid lines
     plt.savefig(f"{file_name}.png")  # Save the plot as a PNG file
     plt.show()
+    
+    
+    
+def plot_all_motor_data(directory='motor_data'):
+    import matplotlib.pyplot as plt
+    import os
+
+    # Ensure output directory for plots exists
+    plot_directory = 'motor_plots'
+    os.makedirs(plot_directory, exist_ok=True)
+
+    # List all files in the directory
+    for filename in os.listdir(directory):
+        if filename.endswith('.txt'):
+            filepath = os.path.join(directory, filename)
+            times, actual_angles, target_angles, pid_outputs = [], [], [], []
+            with open(filepath, 'r') as file:
+                for line in file:
+                    time_point, actual_angle, target_angle, pid_output = line.strip().split(',')
+                    times.append(float(time_point))
+                    actual_angles.append(float(actual_angle))
+                    target_angles.append(float(target_angle))
+                    pid_outputs.append(float(pid_output))
+
+            # Plotting the data
+            plt.figure(figsize=(10, 5))
+            plt.plot(times, actual_angles, 'o-', label='Actual Motor Angle')
+            plt.plot(times, target_angles, 'x--', label='Target Motor Angle')
+            filename_split = filename.split('_')
+            motor_id = filename_split[2]
+            date = filename_split[0]
+            time = filename_split[1]
+            plt.title(f'Motor{motor_id} Angle Over Time')
+            plt.xlabel('Time (seconds)')
+            plt.ylabel('Motor Angle (degrees)')
+            plt.grid(True)
+            plt.legend()
+            plot_filename = os.path.join(plot_directory, f"{date}_{time}_{motor_id}_plot.png")
+            plt.savefig(plot_filename)
+            plt.close()

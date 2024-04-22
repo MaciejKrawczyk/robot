@@ -15,7 +15,7 @@ CORS(app)
 def emit_current_angle():
     while True:
         current_angle = robotAPI.motor_theta1_controller.motor.get_angle()
-        print(current_angle)
+        # print(current_angle)
         socketio.emit('command_response', {'angle': current_angle})
         time.sleep(0.1)  # Adjust sleep time as necessary
 
@@ -77,7 +77,7 @@ def handle_command(command_object):
     if command_name == 'move-to':
         pass
 
-    print(f'received command: {command_object}')
+    # print(f'received command: {command_object}')
 
 
 @app.route('/move-to', methods=['POST'])
