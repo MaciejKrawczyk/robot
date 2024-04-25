@@ -9,7 +9,7 @@ def degrees_to_radians(degrees: float):
 
 
 def radians_to_degrees(radians: float):
-    degrees = radians * (180 / math.pi)
+    degrees = radians * (180 / np.pi)
     return degrees
 
 

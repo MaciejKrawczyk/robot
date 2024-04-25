@@ -45,6 +45,30 @@ def inverse_kinematics3(x, y, z, l1=14, l2=9, l3=9):
         fi3 = math.acos((r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2)) 
         theta3 = fi3 - math.pi 
 
-        angles = {"theta1": radians_to_degrees(theta1), "theta2": radians_to_degrees(theta2), "theta3": radians_to_degrees(theta3)}
+        # angles = {"theta1": radians_to_degrees(theta1), "theta2": radians_to_degrees(theta2), "theta3": radians_to_degrees(theta3)}
+        angles = {"theta1": theta1, "theta2": theta2, "theta3": theta3}
         return angles
     
+    
+def inverse_kinematics2( x, y, z, l1=14, l2=9, l3=9):
+    """
+    wg filmiku z yt https://www.youtube.com/watch?v=D93iQVoSScQ
+    elbow up
+    """
+
+    h = l1
+    L1 = l2
+    L2 = l3
+
+    theta1 = math.atan2(y, x)  # 1
+    r2 = z - h  # 4
+    r1 = math.sqrt(x ** 2 + y ** 2)  #
+    r3 = math.sqrt(r1 ** 2 + r2 ** 2)  #
+    fi2 = math.atan2(r2, r1)  # 3
+    fi1 = math.acos((L2 ** 2 - L1 ** 2 - r3 ** 2) / (-2 * L1 * r3))  #
+    theta2 = fi2 - fi1  # 2
+    fi3 = math.acos((r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2))  #
+    theta3 = math.pi - fi3  #
+
+    angles = {"theta1": theta1, "theta2": theta2, "theta3": theta3}
+    return angles

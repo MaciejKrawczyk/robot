@@ -1,9 +1,9 @@
 from MotorEncoderCombo import MotorEncoderCombo
 import time
-# import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import datetime
 import os
+
 
 PULSES_PER_REVOLUTION = 1250
 
@@ -13,6 +13,7 @@ def get_filename_datetime():
     # Format as a string suitable for filenames
     formatted = now.strftime("%Y-%m-%d_%H-%M-%S")
     return formatted
+
 
 
 class MotorController:
@@ -59,7 +60,7 @@ class MotorController:
 
         # PID parameters
         Kp = 9
-        Ki = 5
+        Ki = 0
         Kd = 0
 
         # Initialize PID error terms

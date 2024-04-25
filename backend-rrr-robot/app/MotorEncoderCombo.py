@@ -1,7 +1,19 @@
 import time
 import RPi.GPIO as GPIO
+import numpy as np
+import math
 
 PULSES_PER_REVOLUTION = 1220
+
+
+def wrap_angle(angle):
+    return (angle + np.pi) % (2 * np.pi)
+
+
+def degrees_to_radians(degrees: float):
+    radians = degrees * (math.pi / 180)
+    return radians
+
 
 class MotorEncoderCombo:
     def __init__(
@@ -42,7 +54,14 @@ class MotorEncoderCombo:
         return self._pulses
 
     def get_angle(self):
-        return (self._pulses * 360) / self.pulses_per_revolution
+        angle = (self._pulses * 360) / self.pulses_per_revolution
+        return angle
+        # angle = angle % 360  # Normalize angle to be within [0, 360)
+        # if angle > 180:
+        #     angle -= 360  # Adjust if angle is in the third or fourth quadrant
+        # elif angle <= -180:
+        #     angle += 360  # Correctly wrap around if angle goes below -180
+        # return angle
 
     def set_angle(self, angle):
         # This method can be expanded to include logic for moving the motor to the desired angle

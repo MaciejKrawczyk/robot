@@ -1,71 +1,17 @@
 import numpy as np
-from .helpers import pol2cart, cart2pol, radians_to_degrees
 import math
-from .kinematics import forward_kinematics
+import matplotlib.pyplot as plt
+import time
 
-# def add_points(points, calm):
-#     x1 = points[0, :]
-#     y1 = points[1, :]
-#     z1 = points[2, :]
-    
-#     distx = x1[1] - x1[0]
-#     disty = y1[1] - y1[0]
-#     distz = z1[1] - z1[0]
-    
-#     x = np.zeros(points.shape[1] * 3)
-#     y = np.zeros(points.shape[1] * 3)
-#     z = np.zeros(points.shape[1] * 3)
-    
-#     for i in range(points.shape[1]):
-#         x[i*3] = x1[i]
-#         y[i*3] = y1[i]
-#         z[i*3] = z1[i]
+def degrees_to_radians(degrees: float):
+    radians = degrees * (math.pi / 180)
+    return radians
 
-#     TH, R, Z = cart2pol(distx, disty, distz)
-#     TH += calm * np.pi / 4
-#     R *= 0.4 * calm
-#     Z *= 0.4 * calm
-#     a, b, c = pol2cart(TH, R, Z)
-    
-#     x[1] = a + x1[0]
-#     y[1] = b + y1[0]
-#     z[1] = c + z1[0]
-    
-#     # Calculate for the last point
-#     distx = x1[-1] - x1[-2]
-#     disty = y1[-1] - y1[-2]
-#     distz = z1[-1] - z1[-2]
-    
-#     TH, R, Z = cart2pol(distx, disty, distz)
-#     TH -= calm * np.pi / 4
-#     R *= 0.4 * calm
-#     Z *= 0.4 * calm
-#     a, b, c = pol2cart(TH, R, Z)
-    
-#     x[-2] = x1[-1] - a
-#     y[-2] = y1[-1] - b
-#     z[-2] = z1[-1] - c
-    
-#     # Calculate for intermediate points
-#     for i in range(1, points.shape[1] - 1):
-#         distx = (x1[i + 1] - x1[i - 1]) / 2
-#         disty = (y1[i + 1] - y1[i - 1]) / 2
-#         distz = (z1[i + 1] - z1[i - 1]) / 2
-#         TH, R, Z = cart2pol(distx, disty, distz)
-#         TH *= (-1)**(i+1) * calm * np.pi / 2
-#         R *= 0.3 * calm
-#         Z *= 0.3 * calm
-#         a, b, c = pol2cart(TH, R, Z)
-        
-#         x[3*i-2] = x1[i] - a
-#         y[3*i-2] = y1[i] - b
-#         z[3*i-2] = z1[i] - c
-        
-#         x[3*i] = x1[i] + a
-#         y[3*i] = y1[i] + b
-#         z[3*i] = z1[i] + c
-        
-#     return x, y, z
+
+def radians_to_degrees(radians: float):
+    degrees = radians * (180 / np.pi)
+    return degrees
+
 
 def cart2pol(x, y, z):
     rho = np.sqrt(x**2 + y**2 + z**2)
@@ -142,15 +88,6 @@ def add_points(points, calm):
     return x, y, z
 
 
-def wrap_angle(angle):
-    return (angle + np.pi) % (2 * np.pi)
-
-
-# def degrees_to_radians(degrees: float):
-#     radians = degrees * (math.pi / 180)
-#     return radians
-
-
 def inverse_kinematics_numpy(x, y, z, l1=14, l2=9, l3=9):
     h = l1
     L1 = l2
@@ -173,11 +110,11 @@ def inverse_kinematics_numpy(x, y, z, l1=14, l2=9, l3=9):
     # elif (L2 ** 2 - L1 ** 2 - r3 ** 2) / (-2 * L1 * r3) > 1 or (r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2) > 1:
     #     theta1 = theta1 - 180
 
-    angles = (
+    angles = [
         radians_to_degrees(theta1),
         radians_to_degrees(theta2),
         radians_to_degrees(theta3)
-    )
+    ]
     return angles
 
 
@@ -201,18 +138,17 @@ def inverse_kinematics_numpy_2( x, y, z, l1=14, l2=9, l3=9):
     fi3 = np.arccos(np.clip((r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2), -1.0, 1.0))
     theta3 = math.pi - fi3  #
 
-    angles = (
+    angles = [
         radians_to_degrees(theta1),
         radians_to_degrees(theta2),
         radians_to_degrees(theta3)
-    )
+    ]
     return angles
 
 
 # def bezier(X, Y, Z, speed):
 #     x, y, z = np.array([]), np.array([]), np.array([])
-    
-#     # Process each segment of four points
+
 #     for i in range(0, len(X) - 1, 3):
 #         if i + 3 >= len(X):
 #             break
@@ -229,9 +165,7 @@ def inverse_kinematics_numpy_2( x, y, z, l1=14, l2=9, l3=9):
 #         x = np.concatenate([x, curve_x])
 #         y = np.concatenate([y, curve_y])
 #         z = np.concatenate([z, curve_z])
-    
-#     # Calculate angles after generating the full curve
-#     # Assume that inverse_kinematics_numpy returns a tuple (theta1, theta2, theta3)
+
 #     angles = np.array([inverse_kinematics_numpy(x[i], y[i], z[i]) for i in range(len(x))])
 #     theta1 = angles[:, 0]
 #     theta2 = angles[:, 1]
@@ -239,6 +173,71 @@ def inverse_kinematics_numpy_2( x, y, z, l1=14, l2=9, l3=9):
     
 #     return x, y, z, theta1, theta2, theta3
 
+
+# def bezier(X, Y, Z, speed):
+#     x, y, z = np.array([]), np.array([]), np.array([])
+#     previous_point = None  # Initialize the previous point as None
+#     prev_angles = None  # Placeholder to store previous angles
+
+#     for i in range(0, len(X) - 1, 3):
+#         if i + 3 >= len(X):
+#             break
+#         p0 = np.array([X[i], Y[i], Z[i]])
+#         p1 = np.array([X[i+1], Y[i+1], Z[i+1]])
+#         p2 = np.array([X[i+2], Y[i+2], Z[i+2]])
+#         p3 = np.array([X[i+3], Y[i+3], Z[i+3]])
+
+#         t = np.linspace(0, 1, int(1/speed) + 1)
+#         curve_x = (1 - t)**3 * p0[0] + 3 * (1 - t)**2 * t * p1[0] + 3 * (1 - t) * t**2 * p2[0] + t**3 * p3[0]
+#         curve_y = (1 - t)**3 * p0[1] + 3 * (1 - t)**2 * t * p1[1] + 3 * (1 - t) * t**2 * p2[1] + t**3 * p3[1]
+#         curve_z = (1 - t)**3 * p0[2] + 3 * (1 - t)**2 * t * p1[2] + 3 * (1 - t) * t**2 * p2[2] + t**3 * p3[2]
+
+#         x = np.concatenate([x, curve_x])
+#         y = np.concatenate([y, curve_y])
+#         z = np.concatenate([z, curve_z])
+
+#     angles = []
+#     is_theta1_jump_plus = False
+#     is_theta1_jump_minus = False
+#     for i in range(len(x)):
+#         current_point = np.array([x[i], y[i], z[i]])
+#         current_angles = inverse_kinematics_numpy_2(x[i], y[i], z[i])
+#         # current_angles_before_modifications = current_angles.copy()
+#         if previous_point is not None and prev_angles is not None:
+#             # Here we add comparisons between prev_angles and current_angles
+#             # You will fill in the logic you want to handle inside these if statements
+#             if current_angles[0] - prev_angles[0] < -350:
+#                 print('Adjustment needed for theta1 < -200')
+#                 current_angles[0] = current_angles[0] - 360.0
+#                 # if is_theta1_jump_plus is True:
+#                 #     is_theta1_jump_minus = False
+#                 #     is_theta1_jump_plus = False
+                
+#             if current_angles[0] - prev_angles[0] > 170:
+#                 print('Adjustment needed for theta1 > 150')
+#                 # current_angles[0] = current_angles[0] + 360.0
+#                 # is_theta1_jump_plus = True
+#                 # is_theta1_jump_minus = False
+#             # Add more conditions as needed
+            
+#         if is_theta1_jump_plus is True:
+#             # current_angles[0] = current_angles[0] - 360.0
+#             pass
+
+#         if is_theta1_jump_minus is True:
+#             # current_angles[0] = current_angles[0] + 360.0
+#             pass
+
+#         angles.append(current_angles)
+#         previous_point = current_point  # Update the previous point
+#         prev_angles = current_angles  # Update the previous angles
+
+#         angles = np.array(angles)
+#         theta1 = angles[:, 0]
+#         theta2 = angles[:, 1]
+#         theta3 = angles[:, 2]
+
+#     return x, y, z, theta1, theta2, theta3
 
 def bezier(X, Y, Z, speed):
     x, y, z = np.array([]), np.array([]), np.array([])
@@ -281,3 +280,53 @@ def bezier(X, Y, Z, speed):
     theta1, theta2, theta3 = angles.T
 
     return x, y, z, theta1, theta2, theta3
+
+
+
+points = np.array([
+    [0, 0, 32],
+    [-8.97, -0.42, 23.6],
+    [-0.79, 0.0, 31.97],
+    [-1.37, -8.26, 26.3]
+]).T  # Transpose to match MATLAB's format
+
+# Extract the initial x, y, z coordinates
+x0, y0, z0 = points
+
+# Plot initial points
+fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
+ax.plot3D(x0, y0, z0, 'ko-', label='Initial Points')
+ax.set_title('Initial and Bézier Curve')
+
+# Add points and plot them
+X, Y, Z = add_points(points, 1)
+ax.plot3D(X[0], X[1], X[2], 'ro-', label='Refined Points')
+
+# Generate and plot Bézier curve
+x, y, z, theta1, theta2, theta3 = bezier(X, Y, Z, 0.01)
+ax.plot3D(x, y, z, 'go-', label='Bézier Curve')
+ax.legend()
+
+# New figure for changes over time
+fig, axs = plt.subplots(3, 1, figsize=(10, 15))
+axs[0].plot(np.linspace(0, 1, len(x)), theta1, 'b-')
+axs[0].set_title('Change of theta1 over time')
+axs[0].set_xlabel('t')
+axs[0].set_ylabel('theta1')
+
+axs[1].plot(np.linspace(0, 1, len(y)), theta2, 'g-')
+axs[1].set_title('Change of theta2 over time')
+axs[1].set_xlabel('t')
+axs[1].set_ylabel('theta2')
+
+axs[2].plot(np.linspace(0, 1, len(z)), theta3, 'b-')
+axs[2].set_title('Change of theta3 over time')
+axs[2].set_xlabel('t')
+axs[2].set_ylabel('theta3')
+
+for ax in axs:
+    ax.grid(True)
+
+plt.tight_layout()
+plt.show()
+plt.savefig(f'app/tests/{time.strftime("%d_%m_%H_%M_%S", time.localtime())}_test_plot_bezier.png')
