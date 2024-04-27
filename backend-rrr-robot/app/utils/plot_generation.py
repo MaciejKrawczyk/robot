@@ -143,14 +143,24 @@ def plot_position_velocity(vx, vy, vz, step_size, file_name='velocity_over_time'
 def plot_all_motor_data(directory='motor_data'):
     import matplotlib.pyplot as plt
     import os
+    from collections import defaultdict
 
-    # Ensure output directory for plots exists
     plot_directory = 'motor_plots'
     os.makedirs(plot_directory, exist_ok=True)
 
-    # List all files in the directory
+    # Group files by date and time
+    files_by_datetime = defaultdict(list)
     for filename in os.listdir(directory):
         if filename.endswith('.txt'):
+            # Extract date and time from filename
+            date_time = '_'.join(filename.split('_')[:2])
+            files_by_datetime[date_time].append(filename)
+
+    # Plot files grouped by date and time
+    for date_time, filenames in files_by_datetime.items():
+        num_files = len(filenames)
+        fig, axs = plt.subplots(num_files, 1, figsize=(10, 5 * num_files), squeeze=False)
+        for i, filename in enumerate(filenames):
             filepath = os.path.join(directory, filename)
             times, actual_angles, target_angles, pid_outputs = [], [], [], []
             with open(filepath, 'r') as file:
@@ -161,19 +171,17 @@ def plot_all_motor_data(directory='motor_data'):
                     target_angles.append(float(target_angle))
                     pid_outputs.append(float(pid_output))
 
-            # Plotting the data
-            plt.figure(figsize=(10, 5))
-            plt.plot(times, actual_angles, 'o-', label='Actual Motor Angle')
-            plt.plot(times, target_angles, 'x--', label='Target Motor Angle')
-            filename_split = filename.split('_')
-            motor_id = filename_split[2]
-            date = filename_split[0]
-            time = filename_split[1]
-            plt.title(f'Motor{motor_id} Angle Over Time')
-            plt.xlabel('Time (seconds)')
-            plt.ylabel('Motor Angle (degrees)')
-            plt.grid(True)
-            plt.legend()
-            plot_filename = os.path.join(plot_directory, f"{date}_{time}_{motor_id}_plot.png")
-            plt.savefig(plot_filename)
-            plt.close()
+            # Plotting the data in subplots
+            axs[i, 0].plot(times, actual_angles, 'o-', label='Actual Motor Angle')
+            axs[i, 0].plot(times, target_angles, 'x--', label='Target Motor Angle')
+            motor_id = filename.split('_')[2]  # Adjusted to get motor_id correctly
+            axs[i, 0].set_title(f'Motor {motor_id} Angle Over Time')
+            axs[i, 0].set_xlabel('Time (seconds)')
+            axs[i, 0].set_ylabel('Motor Angle (degrees)')
+            axs[i, 0].grid(True)
+            axs[i, 0].legend()
+
+        plt.tight_layout()
+        plot_filename = os.path.join(plot_directory, f"{date_time}_all_motors_plot.png")
+        plt.savefig(plot_filename)
+        plt.close()

@@ -209,40 +209,91 @@ def inverse_kinematics_numpy_2( x, y, z, l1=14, l2=9, l3=9):
     return angles
 
 
-# def bezier(X, Y, Z, speed):
-#     x, y, z = np.array([]), np.array([]), np.array([])
+def check_if_positive(number: float):
+    if number > 0:
+        return True
+    else:
+        return False
     
-#     # Process each segment of four points
-#     for i in range(0, len(X) - 1, 3):
-#         if i + 3 >= len(X):
-#             break
-#         p0 = np.array([X[i], Y[i], Z[i]])
-#         p1 = np.array([X[i+1], Y[i+1], Z[i+1]])
-#         p2 = np.array([X[i+2], Y[i+2], Z[i+2]])
-#         p3 = np.array([X[i+3], Y[i+3], Z[i+3]])
+def check_if_negative(number: float):
+    if number < 0:
+        return True
+    else:
+        return False
+
+def check_quarters_of_x(list_of_x_values, list_of_y_values, list_of_z_values):
+    
+    is_quarter_from_I_II = False
+    is_quarter_from_II_to_III = False
+    is_quarter_from_III_to_IV = False
+    is_quarter_from_II_to_I = False
+    is_quarter_from_III_to_II = False
+    is_quarter_from_IV_to_III = False
+    
+    angles = np.array([inverse_kinematics_numpy(list_of_x_values[i], list_of_y_values[i], list_of_z_values[i]) for i in range(len(list_of_x_values))])
+    list_of_theta1 = angles[:, 0]
+    list_of_theta2 = angles[:, 1]
+    list_of_theta3 = angles[:, 2]
+    
+    for i in range(1, len(list_of_x_values)):            
+        current_x = list_of_x_values[i]
+        previous_x = list_of_x_values[i-1]
         
-#         t = np.linspace(0, 1, int(1/speed) + 1)
-#         curve_x = (1 - t)**3 * p0[0] + 3 * (1 - t)**2 * t * p1[0] + 3 * (1 - t) * t**2 * p2[0] + t**3 * p3[0]
-#         curve_y = (1 - t)**3 * p0[1] + 3 * (1 - t)**2 * t * p1[1] + 3 * (1 - t) * t**2 * p2[1] + t**3 * p3[1]
-#         curve_z = (1 - t)**3 * p0[2] + 3 * (1 - t)**2 * t * p1[2] + 3 * (1 - t) * t**2 * p2[2] + t**3 * p3[2]
+        current_y = list_of_y_values[i]
+        previous_y = list_of_y_values[i-1]
         
-#         x = np.concatenate([x, curve_x])
-#         y = np.concatenate([y, curve_y])
-#         z = np.concatenate([z, curve_z])
+        current_z = list_of_z_values[i]
+        previous_z = list_of_z_values[i-1]
+        
+        # check if change quarter from II to III
+        if check_if_negative(current_x) and check_if_negative(previous_x) and check_if_positive(previous_y) and check_if_negative(current_y):
+            is_quarter_from_I_II = False
+            is_quarter_from_II_to_III = True
+            is_quarter_from_III_to_IV = False
+            is_quarter_from_II_to_I = False
+            is_quarter_from_III_to_II = False
+            is_quarter_from_IV_to_III = False
+        
+        # check if change quarter from III to II
+        if check_if_negative(current_x) and check_if_negative(previous_x) and check_if_negative(previous_y) and check_if_positive(current_y):       
+            is_quarter_from_I_II = False
+            is_quarter_from_II_to_III = False
+            is_quarter_from_III_to_IV = False
+            is_quarter_from_II_to_I = False
+            is_quarter_from_III_to_II = True
+            is_quarter_from_IV_to_III = False
+        
+        # check if change quarter from II to I
+        if check_if_negative(previous_x) and check_if_positive(current_x) and check_if_positive(previous_y) and check_if_positive(current_y):
+            is_quarter_from_I_II = False
+            is_quarter_from_II_to_III = False
+            is_quarter_from_III_to_IV = False
+            is_quarter_from_II_to_I = True
+            is_quarter_from_III_to_II = False
+            is_quarter_from_IV_to_III = False
+        
+        # check if change quarter from III to IV
+        if check_if_negative(previous_x) and check_if_positive(current_x) and check_if_negative(previous_y) and check_if_negative(current_y):
+            is_quarter_from_I_II = False
+            is_quarter_from_II_to_III = False
+            is_quarter_from_III_to_IV = True
+            is_quarter_from_II_to_I = False
+            is_quarter_from_III_to_II = False
+            is_quarter_from_IV_to_III = False
+        
+        if is_quarter_from_II_to_III:
+            list_of_theta1[i] = list_of_theta1[i] + 360.0
+        
+        if is_quarter_from_III_to_II:
+            list_of_theta1[i] = list_of_theta1[i] - 360.0
+        
+    return list_of_theta1, list_of_theta2, list_of_theta3
+
     
-#     # Calculate angles after generating the full curve
-#     # Assume that inverse_kinematics_numpy returns a tuple (theta1, theta2, theta3)
-#     angles = np.array([inverse_kinematics_numpy(x[i], y[i], z[i]) for i in range(len(x))])
-#     theta1 = angles[:, 0]
-#     theta2 = angles[:, 1]
-#     theta3 = angles[:, 2]
-    
-#     return x, y, z, theta1, theta2, theta3
 
 
 def bezier(X, Y, Z, speed):
     x, y, z = np.array([]), np.array([]), np.array([])
-    prev_angles = None  # Placeholder to store previous angles
 
     for i in range(0, len(X) - 1, 3):
         if i + 3 >= len(X):
@@ -251,33 +302,23 @@ def bezier(X, Y, Z, speed):
         p1 = np.array([X[i+1], Y[i+1], Z[i+1]])
         p2 = np.array([X[i+2], Y[i+2], Z[i+2]])
         p3 = np.array([X[i+3], Y[i+3], Z[i+3]])
-
+        
         t = np.linspace(0, 1, int(1/speed) + 1)
         curve_x = (1 - t)**3 * p0[0] + 3 * (1 - t)**2 * t * p1[0] + 3 * (1 - t) * t**2 * p2[0] + t**3 * p3[0]
         curve_y = (1 - t)**3 * p0[1] + 3 * (1 - t)**2 * t * p1[1] + 3 * (1 - t) * t**2 * p2[1] + t**3 * p3[1]
         curve_z = (1 - t)**3 * p0[2] + 3 * (1 - t)**2 * t * p1[2] + 3 * (1 - t) * t**2 * p2[2] + t**3 * p3[2]
-
+        
         x = np.concatenate([x, curve_x])
         y = np.concatenate([y, curve_y])
         z = np.concatenate([z, curve_z])
 
-    angles = []
-    for i in range(len(x)):
-        current_point = np.array([x[i], y[i], z[i]])
-        current_angles = np.array(inverse_kinematics_numpy_2(x[i], y[i], z[i]))
-        if prev_angles is not None:
-            angle_differences = current_angles - prev_angles
-            # Correct angle jumps greater than 180 degrees
-            for j in range(len(current_angles)):
-                if angle_differences[j] > 180:
-                    current_angles[j] -= 360
-                elif angle_differences[j] < -180:
-                    current_angles[j] += 360
+    theta1, theta2, theta3 = check_quarters_of_x(x,y,z)
 
-        angles.append(current_angles)
-        prev_angles = current_angles  # Update the previous angles
-
-    angles = np.array(angles)
-    theta1, theta2, theta3 = angles.T
-
+    # angles = np.array([inverse_kinematics_numpy(x[i], y[i], z[i]) for i in range(len(x))])
+    
+    # angles = np.array([inverse_kinematics_numpy(updated_x[i], updated_y[i], updated_z[i]) for i in range(len(x))])
+    # theta1 = angles[:, 0]
+    # theta2 = angles[:, 1]
+    # theta3 = angles[:, 2]
+    
     return x, y, z, theta1, theta2, theta3
