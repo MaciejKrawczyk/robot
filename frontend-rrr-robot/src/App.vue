@@ -141,11 +141,11 @@
 
             </Form>
 
-            <DrawerTrigger as-child>
-              <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px]">
-                <Play/>
-              </Button>
-            </DrawerTrigger>
+            <!--            <DrawerTrigger as-child>-->
+            <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px]" @click.prevent="runProgram">
+              <Play/>
+            </Button>
+            <!--            </DrawerTrigger>-->
 
           </TabsContent>
 
@@ -176,7 +176,9 @@
                   <TableCell>{{ position.x }}</TableCell>
                   <TableCell>{{ position.y }}</TableCell>
                   <TableCell>{{ position.z }}</TableCell>
-                  <TableCell><button @click.prevent="deletePositionFromDB(position.id)">remove</button></TableCell>
+                  <TableCell>
+                    <button @click.prevent="deletePositionFromDB(position.id)">remove</button>
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -319,9 +321,9 @@
 </template>
 
 <script setup lang="ts">
-import {FormControl, Form, FormDescription, FormItem, FormMessage, FormLabel, FormField} from '@/components/ui/form'
+import {Form, FormField, FormItem} from '@/components/ui/form'
 import {Skeleton} from '@/components/ui/skeleton'
-import {Save, Trash2, Plus, Play} from 'lucide-vue-next'
+import {Play, Plus, Save, Trash2} from 'lucide-vue-next'
 import {
   Select,
   SelectContent,
@@ -334,7 +336,7 @@ import {
 import {Button} from '@/components/ui/button';
 import {onMounted, ref} from 'vue';
 import io from 'socket.io-client';
-import {Tabs, TabsTrigger, TabsList, TabsContent} from "@/components/ui/tabs";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table'
 import {useToast} from '@/components/ui/toast/use-toast'
 import {Toaster} from "@/components/ui/toast"
@@ -343,10 +345,8 @@ import LoadingScreen from "@/components/LoadingScreen.vue";
 import {parseCommandsToCode} from "@/utils.ts";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -407,6 +407,8 @@ const isLoading = ref(false)
 
 const positions = ref<null | Position[]>(null)
 const loading = ref<boolean>(false)
+
+const isLoadingRunProgram = ref(false)
 
 const code = ref<Command[]>([])
 
@@ -479,6 +481,41 @@ const deletePositionFromDB = async (id: number) => {
 const removeCommand = (id: number) => {
   code.value = code.value.filter(cmd => cmd.id !== id);
 };
+
+const runProgram = async () => {
+  isLoadingRunProgram.value = true
+  const url = 'http://localhost:5000/api/run'
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    return await response.json()
+  } catch (e) {
+
+  } finally {
+    isLoadingRunProgram.value = false
+  }
+}
+
+const emergencyStopProgram = async () => {
+
+}
+
+const generatePlots = async () => {
+  const url = 'http://localhost:5000/api/plot'
+  const response = await fetch(url, {
+    method: "POST",
+  })
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+
+  return await response.json()
+}
 
 const fetchCodeFromDB = async () => {
   // loading.value = true
