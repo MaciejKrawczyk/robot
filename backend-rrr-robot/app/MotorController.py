@@ -59,7 +59,7 @@ class MotorController:
         pid_outputs = []
 
         # PID parameters
-        Kp = 9
+        Kp = 7
         Ki = 0
         Kd = 0
 
