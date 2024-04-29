@@ -89,7 +89,7 @@ class MotorController:
             # Small delay for PID computation pace
             time.sleep(0.01)
 
-    def run_using_pid_control(self, target_angles, motor_id=''):
+    def run_using_pid_control(self, target_angles, motor_id='', is_last=False):
         self.stop_holding_position()
         # Ensure directory exists
         directory = 'motor_data'
@@ -154,6 +154,8 @@ class MotorController:
             for time_point, actual_angle, target_angle, pid_output in zip(times, actual_angles, target_angles_record, pid_outputs):
                 file.write(f"{time_point},{actual_angle},{target_angle},{pid_output}\n")
 
+        if is_last:
+            self.start_holding_position()
 
 
     def run_using_velocities_array_no_pid(self, velocities, target_angles, motor_id=''):

@@ -1,28 +1,25 @@
-from flask import Flask, jsonify, request
+from flask import jsonify, request
 import time
-from flask_socketio import SocketIO
-from flask_cors import CORS, cross_origin
-# from RRRRobotAPI2 import RobotAPI
+from flask_cors import cross_origin
 from RRRRobotAPI2 import RobotAPI
 from threads.MotorMonitoringThread import MotorMonitoringThread
 from threads.MotorThread import MotorThread
 from threads.MotorHoldingThread import MotorHoldingThread
-from flask_sqlalchemy import SQLAlchemy
 import json
 import numpy as np
 from routes.routes import api
 from services import position, robot_code
 from utils.helpers import calculate_velocity, get_filename_datetime
-from utils.plot_generation import plot_angles, plot_positions, plot_velocity_with_calculated_velocitites, plot_angle_velocity, plot_position_velocity, plot_all_motor_data
+from utils.plot_generation import plot_angles, plot_positions, plot_angle_velocity, plot_all_motor_data
 from utils.bezier_trajectory import bezier, add_points
 from app import create_app
 from models import position
 
 
 app, socketio = create_app()
+app.register_blueprint(api)
 
 robotAPI = RobotAPI()
-app.register_blueprint(api)
 
 motor1_controller = robotAPI.motor1_controller
 # motor2_controller = robotAPI.motor2_controller  # Uncomment if motor2 is used
@@ -44,10 +41,7 @@ motor_monitoring_thread = MotorMonitoringThread(
 )
 
 
-
 def transform_to_numpy(points):
-    # Extract x, y, z coordinates into separate lists
-    # print(points)
     x_coords = [point['x'] for point in points]
     y_coords = [point['y'] for point in points]
     z_coords = [point['z'] for point in points]
@@ -64,30 +58,21 @@ def calculate_run(movements):
     step = 0.01
     
     run = {}
+    last_index = len(movements) - 1  # Calculate the last index of the movements list
     for movement_id, movement in enumerate(movements):
         
         if not isinstance(movement, dict):
             
-            # print(movement)
-            
             run[movement_id] = {'velocities': {'vtheta1': [], 'vtheta2': [], 'vtheta3': []}, 'angles': {'theta1': [], 'theta2': [], 'theta3': []}}
             
             numpy_notation_movement_list = transform_to_numpy(movement)
-            # print(f'calculating points, cnt = {cnt}')
+
             X, Y, Z = add_points(numpy_notation_movement_list, cnt)
-            # print(f'add_points, X: {X}, Y:{Y}, Z:{Z}')
-            # print(f'calculating trajectory, step = {step}s')
-            # x_b, y_b, z_b = bezier(X, Y, Z, step)
             
             x, y, z, theta1, theta2, theta3 = bezier(X, Y, Z, step)
-            
-            # x, y, z, theta1, theta2, theta3 = shortest_path(X, Y, Z, step)
-            
-            # print(x_b)
-            # x, y, z = modify_curve(x_b, y_b, z_b, inverse_kinematics3)
-            # print(f'calculating velocities')
+
             vtheta1, vtheta2, vtheta3 = calculate_velocity(theta1, theta2, theta3, step)
-            # print(f'generating graphs')
+
             total_time = len(x) * step
             plot_angles(
                 theta1, theta2, theta3,
@@ -95,7 +80,7 @@ def calculate_run(movements):
                 f'{get_filename_datetime()}_movement_{movement_id}_angles_over_time_calculated'
             )
             plot_positions(
-                x,y,z,
+                x, y, z,
                 total_time,
                 f'{get_filename_datetime()}_movement_{movement_id}_position_over_time_calculated'
             )
@@ -111,11 +96,11 @@ def calculate_run(movements):
             run[movement_id]['angles']['theta1'] = theta1
             run[movement_id]['angles']['theta2'] = theta2
             run[movement_id]['angles']['theta3'] = theta3
+            run[movement_id]['is_last'] = (movement_id == last_index)
             
         else:
             run[movement_id] = {'sleep': movement['sleep']}
     
-    # print(run)
     return run
 
 
@@ -131,22 +116,6 @@ def run():
 
     code = json.loads(robot_code.get_robot_code(1).code)
     
-    # def get_position_by_id(id):
-    #     pos = position.Position.query.get(id)
-    #     return {
-    #         'x': float(pos.x),
-    #         'y': float(pos.y), 
-    #         'z': float(pos.z)
-    #     }
-    
-    # def get_angles_by_id(id):
-    #     pos = position.Position.query.get(id)
-    #     return {
-    #         'theta1': float(pos.theta1),
-    #         'theta2': float(pos.theta2), 
-    #         'theta3': float(pos.theta3)
-    #     }
-    
     def get_full_position_by_id(id):
         pos = position.Position.query.get(id)
         return {
@@ -158,49 +127,40 @@ def run():
             'z': float(pos.z)
         }
     
-    # current_position = request.get_json()
-    
     current_full_position = motor_monitoring_thread.get_position_and_angles2()
-    # current_position_angles = motor_monitoring_thread.get_angles()
     
     movements = []
     sleeps = []
     
     movement = []
     movement.append(current_full_position)
-    # print(code)
     
     for command in code:
         if command['name'] == 'move_to':
             pos = get_full_position_by_id(int(command['body']))
-            
-            # pos = position.get_position(int(command['body']))
-            
             movement.append(pos)
+            
         if command['name'] == 'sleep':
             movements.append(movement)
             movement = []
             movement.append(movements[-1][-1])
             sleeps.append(int(command['body']))
             movements.append({'sleep': int(command['body'])})
+            
+    # movement['is_last'] = True
     movements.append(movement)
 
-    # print(movements)
-
     run = calculate_run(movements)
-    # run_movement_using_velocities(velocities)
     
     time.sleep(1)
     
     for movement_id, action in run.items():
-        if action.get('sleep') is None:
-            motor3_thread.send_command({'body': {'velocities': action['velocities']['vtheta3'].tolist(), 'angles': action['angles']['theta3'].tolist()}, 'name': 'move_velocities'})
-            motor1_thread.send_command({'body': {'velocities': action['velocities']['vtheta1'].tolist(), 'angles': action['angles']['theta1'].tolist()}, 'name': 'move_velocities'})
-            # print('sent move_velocity')
-        else:
+        if action.get('sleep') is not None:
             motor3_thread.send_command({'name': 'sleep', 'body': int(action['sleep'])})
             motor1_thread.send_command({'name': 'sleep', 'body': int(action['sleep'])})
-            # print('sent sleep')
+        else:
+            motor3_thread.send_command({'body': {'velocities': action['velocities']['vtheta3'].tolist(), 'angles': action['angles']['theta3'].tolist()}, 'name': 'move_velocities', 'is_last': action['is_last']})
+            motor1_thread.send_command({'body': {'velocities': action['velocities']['vtheta1'].tolist(), 'angles': action['angles']['theta1'].tolist()}, 'name': 'move_velocities', 'is_last': action['is_last']})
 
     return {'movements': movements, 'sleeps': sleeps}
 

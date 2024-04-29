@@ -33,7 +33,7 @@ class MotorThread:
         elif 'move_velocities' in command['name']: 
             self.motor_holding_thread.stop_holding_position()
             time.sleep(0.01)
-            self.motor_controller.run_using_pid_control(command['body']['angles'], motor_id=self.id)
+            self.motor_controller.run_using_pid_control(command['body']['angles'], motor_id=self.id, is_last=command['is_last'])
         elif 'sleep' in command['name']:
             self.motor_holding_thread.start_holding_position()
             seconds = int(command['body'])
