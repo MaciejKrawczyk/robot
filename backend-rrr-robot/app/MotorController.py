@@ -19,33 +19,78 @@ def get_filename_datetime():
 class MotorController:
     def __init__(self, motor: MotorEncoderCombo):
         self.motor = motor
-        self.Kp = 1.0  # Proportional gain
-        self.Ki = 0.1  # Integral gain
-        self.Kd = 0.05 # Derivative gain
+        self.Kp = 3.00
+        self.Ki = 0.00
+        self.Kd = 0.00
+        self.target_angle = self.get_current_angle()
+        self.holding_position = True
 
     def get_current_angle(self):
         return self.motor.get_angle()
 
-    def set_angle_to(self, angle):
-        pass
-
-    def increment_angle_by(self, angle):
-        pass
-
     def run(self, direction, percent_of_power=100):
+        self.stop_holding_position()
         self.motor.run_motor(direction=direction, percent_of_power=percent_of_power)
+
+    def start_holding_position(self, motor_id=''):
+        self.target_angle = self.get_current_angle()
+        self.holding_position = True
+        print(f'[MOTOR {motor_id}] HOLDING POSITION: {round(self.target_angle, 2)}°')
+        self.hold_position()
+
+    def stop_holding_position(self, motor_id=''):
+        print(f'[MOTOR {motor_id}]HOLDING POSITION STOPPED!')
+        self.holding_position = False
 
     def stop(self):
         self.motor.stop()
 
     def sleep(self, seconds, motor_id=''):
+        self.start_holding_position()
         start_time = time.time()  # Start time for reference
         print(f'[MOTOR{motor_id} SLEEP STARTED] Seconds: {seconds}')
         time.sleep(seconds) 
+        self.stop_holding_position()
         print(f'[MOTOR{motor_id} SLEEP FINISHED] Real break time: {time.time() - start_time:.2f}')
 
+    def hold_position(self):
+        # PID parameters
+        Kp = self.Kp
+        Ki = self.Ki
+        Kd = self.Kd
+
+        # Initialize PID error terms
+        prev_error = 0
+        integral = 0
+        
+        while self.holding_position:
+            current_angle = self.motor.get_angle()
+            error = self.target_angle - current_angle
+
+            # Integral and derivative calculations
+            integral += error * 0.01
+            derivative = (error - prev_error) / 0.01
+            prev_error = error
+
+            # PID output calculation
+            pid_output = Kp * error + Ki * integral + Kd * derivative
+
+            # Calculate direction and ensure speed is within 20 to 100%
+            direction = 'plus' if pid_output > 0 else 'minus'
+            speed_percentage = max(20, min(100, abs(pid_output)))
+
+            # Run the motor with the computed speed and direction
+            self.motor.run_motor(direction, speed_percentage)
+
+            # Optional break condition or continuous running
+            # if abs(error) < 0.1:  # Adjust the threshold based on your accuracy requirements
+            #     break
+
+            # Small delay for PID computation pace
+            time.sleep(0.01)
 
     def run_using_pid_control(self, target_angles, motor_id=''):
+        self.stop_holding_position()
         # Ensure directory exists
         directory = 'motor_data'
         os.makedirs(directory, exist_ok=True)
@@ -59,9 +104,9 @@ class MotorController:
         pid_outputs = []
 
         # PID parameters
-        Kp = 7
-        Ki = 0
-        Kd = 0
+        Kp = self.Kp
+        Ki = self.Ki
+        Kd = self.Kd
 
         # Initialize PID error terms
         prev_error = 0
@@ -98,6 +143,8 @@ class MotorController:
 
         # Stop the motor after finishing
         self.motor.stop()
+        # self.start_holding_position()
+        
         elapsed_time = time.time() - start_time
         print(f"[MOTOR{motor_id} FINISHED MOVEMENT] Total runtime: {elapsed_time:.2f} seconds")
 
@@ -258,7 +305,6 @@ class MotorController:
         plt.legend()
         plt.savefig(f"{get_filename_datetime()}_motor{motor_id}_velocities.png")
         plt.show()
-
 
 
     def move_to(self, angle, hold=False):

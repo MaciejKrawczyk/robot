@@ -6,6 +6,7 @@ from flask_cors import CORS, cross_origin
 from RRRRobotAPI2 import RobotAPI
 from threads.MotorMonitoringThread import MotorMonitoringThread
 from threads.MotorThread import MotorThread
+from threads.MotorHoldingThread import MotorHoldingThread
 from flask_sqlalchemy import SQLAlchemy
 import json
 import numpy as np
@@ -27,9 +28,14 @@ motor1_controller = robotAPI.motor1_controller
 # motor2_controller = robotAPI.motor2_controller  # Uncomment if motor2 is used
 motor3_controller = robotAPI.motor3_controller
 
-motor1_thread = MotorThread(socketio, motor1_controller, 1)
+
+motor1_holding_thread = MotorHoldingThread(socketio, motor1_controller, 1)
+# motor2
+motor3_holding_thread = MotorHoldingThread(socketio, motor3_controller, 3)
+
+motor1_thread = MotorThread(socketio, motor1_controller, 1, motor1_holding_thread)
 # motor2_thread = MotorThread(socketio, motor2_controller)  # Uncomment if motor2 is used
-motor3_thread = MotorThread(socketio, motor3_controller, 3)
+motor3_thread = MotorThread(socketio, motor3_controller, 3, motor3_holding_thread)
 motor_monitoring_thread = MotorMonitoringThread(
     socketio,
     motor1_controller=motor1_controller, 
@@ -38,9 +44,10 @@ motor_monitoring_thread = MotorMonitoringThread(
 )
 
 
+
 def transform_to_numpy(points):
     # Extract x, y, z coordinates into separate lists
-    print(points)
+    # print(points)
     x_coords = [point['x'] for point in points]
     y_coords = [point['y'] for point in points]
     z_coords = [point['z'] for point in points]
@@ -61,14 +68,14 @@ def calculate_run(movements):
         
         if not isinstance(movement, dict):
             
-            print(movement)
+            # print(movement)
             
             run[movement_id] = {'velocities': {'vtheta1': [], 'vtheta2': [], 'vtheta3': []}, 'angles': {'theta1': [], 'theta2': [], 'theta3': []}}
             
             numpy_notation_movement_list = transform_to_numpy(movement)
             # print(f'calculating points, cnt = {cnt}')
             X, Y, Z = add_points(numpy_notation_movement_list, cnt)
-            print(f'add_points, X: {X}, Y:{Y}, Z:{Z}')
+            # print(f'add_points, X: {X}, Y:{Y}, Z:{Z}')
             # print(f'calculating trajectory, step = {step}s')
             # x_b, y_b, z_b = bezier(X, Y, Z, step)
             
@@ -161,7 +168,7 @@ def run():
     
     movement = []
     movement.append(current_full_position)
-    print(code)
+    # print(code)
     
     for command in code:
         if command['name'] == 'move_to':
@@ -178,7 +185,7 @@ def run():
             movements.append({'sleep': int(command['body'])})
     movements.append(movement)
 
-    print(movements)
+    # print(movements)
 
     run = calculate_run(movements)
     # run_movement_using_velocities(velocities)
@@ -215,17 +222,23 @@ def handle_command(command_object):
 
     match command_name:
         case 'stop_theta1':
-            robotAPI.stop_motor1()
+            # robotAPI.stop_motor1()
+            motor1_thread.send_command(command_name)
         case 'stop_theta3':
-            robotAPI.stop_motor3()
+            motor3_thread.send_command(command_name)
+            # robotAPI.stop_motor3()
         case 'theta1+':
-            robotAPI.move_motor1_plus()
+            motor1_thread.send_command(command_name)
+            # robotAPI.move_motor1_plus()
         case 'theta1-':
-            robotAPI.move_motor1_minus()
+            motor1_thread.send_command(command_name)
+            # robotAPI.move_motor1_minus()
         case 'theta3+':
-            robotAPI.move_motor3_plus()
+            motor3_thread.send_command(command_name)
+            # robotAPI.move_motor3_plus()
         case 'theta3-':
-            robotAPI.move_motor3_minus()
+            motor3_thread.send_command(command_name)
+            # robotAPI.move_motor3_minus()
         # case _:
         
     print(f'received command: {command_object}')
@@ -262,6 +275,11 @@ def start_all_threads():
     # motor2_thread.start_thread()  # Uncomment if motor2 is used
     motor3_thread.start_thread()
     motor_monitoring_thread.start_thread()
+    
+    motor1_holding_thread.start_thread()
+    # motor2
+    motor3_holding_thread.start_thread()
+    
     print('started all threads...')
 
 

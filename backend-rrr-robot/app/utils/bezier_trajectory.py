@@ -281,11 +281,21 @@ def check_quarters_of_x(list_of_x_values, list_of_y_values, list_of_z_values):
             is_quarter_from_III_to_II = False
             is_quarter_from_IV_to_III = False
         
+        
         if is_quarter_from_II_to_III:
             list_of_theta1[i] = list_of_theta1[i] + 360.0
         
         if is_quarter_from_III_to_II:
             list_of_theta1[i] = list_of_theta1[i] - 360.0
+            
+        if is_quarter_from_III_to_IV:
+            list_of_theta1[i] = list_of_theta1[i] + 360.0
+            
+        if is_quarter_from_II_to_I:
+            list_of_theta1[i] = list_of_theta1[i] - 360.0
+        
+        
+        
         
     return list_of_theta1, list_of_theta2, list_of_theta3
 

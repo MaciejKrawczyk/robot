@@ -158,6 +158,22 @@ def check_if_negative(number: float):
     else:
         return False
 
+
+def is_point_in_box(x, y, z, x_range=(0, 360), y_range=(), z_range=()):
+    """
+    Check if the point (x, y, z) is inside the box defined by the given ranges.
+
+    Parameters:
+    x, y, z (float): Coordinates of the point to be checked.
+    x_range, y_range, z_range (tuple): Each is a tuple (from, to) defining the range of the box on each axis.
+
+    Returns:
+    bool: True if the point is inside the box, False otherwise.
+    """
+    return (x_range[0] <= x <= x_range[1]) and (y_range[0] <= y <= y_range[1]) and (z_range[0] <= z <= z_range[1])
+
+
+
 def check_quarters_of_x(list_of_x_values, list_of_y_values, list_of_z_values):
     
     is_quarter_from_I_II = False
@@ -271,11 +287,14 @@ def bezier(X, Y, Z, speed):
 
 
 points = np.array([
-    [6.4, -1.03, 16.75],
-    [-1.65, -6.26, 16.75],
-    [-5.96, 1.87, 16.52],
-    [1.28, 6.12, 16.52],
-    [6.23, -0.51, 16.52]
+    # [6.4, -1.03, 16.75],
+    # [-1.65, -6.26, 16.75],
+    # [-5.96, 1.87, 16.52],
+    # [1.28, 6.12, 16.52],
+    # [6.23, -0.51, 16.52]
+    [-8.97, 0.42, 23.6],
+    [-0.79, 0, 31.97],
+    [1.37, -8.26, 26.3]
 ]).T  # Transpose to match MATLAB's format
 
 x0, y0, z0 = points
@@ -295,34 +314,34 @@ ax.legend()
 fig, axs = plt.subplots(3, 2, figsize=(10, 15))
 
 # First row of plots
-axs[0, 0].plot(np.linspace(0, len(points)+1, len(x)), theta1, 'b-')
+axs[0, 0].plot(np.linspace(0, len(points)-1, len(x)), theta1, 'b-')
 axs[0, 0].set_title('Change of theta1 over time')
 axs[0, 0].set_xlabel('t')
 axs[0, 0].set_ylabel('theta1')
 
-axs[0, 1].plot(np.linspace(0,len(points)+1, len(x)), x, 'b-')
+axs[0, 1].plot(np.linspace(0,len(points)-1, len(x)), x, 'b-')
 axs[0, 1].set_title('Change of x over time')
 axs[0, 1].set_xlabel('t')
 axs[0, 1].set_ylabel('x')
 
 # Second row of plots
-axs[1, 0].plot(np.linspace(0, len(points)+1, len(y)), theta2, 'g-')
+axs[1, 0].plot(np.linspace(0, len(points)-1, len(y)), theta2, 'g-')
 axs[1, 0].set_title('Change of theta2 over time')
 axs[1, 0].set_xlabel('t')
 axs[1, 0].set_ylabel('theta2')
 
-axs[1, 1].plot(np.linspace(0, len(points)+1, len(y)), y, 'g-')
+axs[1, 1].plot(np.linspace(0, len(points)-1, len(y)), y, 'g-')
 axs[1, 1].set_title('Change of y over time')
 axs[1, 1].set_xlabel('t')
 axs[1, 1].set_ylabel('y')
 
 # Third row of plots
-axs[2, 0].plot(np.linspace(0, len(points)+1, len(z)), theta3, 'r-')  # Adding the plot for theta3 here
+axs[2, 0].plot(np.linspace(0, len(points)-1, len(z)), theta3, 'r-')  # Adding the plot for theta3 here
 axs[2, 0].set_title('Change of theta3 over time')
 axs[2, 0].set_xlabel('t')
 axs[2, 0].set_ylabel('theta3')
 
-axs[2, 1].plot(np.linspace(0, len(points)+1, len(z)), z, 'r-')
+axs[2, 1].plot(np.linspace(0, len(points), len(z)), z, 'r-')
 axs[2, 1].set_title('Change of z over time')
 axs[2, 1].set_xlabel('t')
 axs[2, 1].set_ylabel('z')
