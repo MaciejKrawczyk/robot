@@ -33,6 +33,21 @@
 
               <div class="flex gap-1">
                 <Button
+                    @mousedown="onTheta2Plus"
+                    @mouseup="onTheta2Stop"
+                >
+                  Theta2+
+                </Button>
+                <Button
+                    @mousedown="onTheta2Minus"
+                    @mouseup="onTheta2Stop"
+                >
+                  Theta2-
+                </Button>
+              </div>
+
+              <div class="flex gap-1">
+                <Button
                     @mousedown="onTheta3Plus"
                     @mouseup="onTheta3Stop"
                 >
@@ -53,6 +68,7 @@
           <TabsContent value="code" class="overflow-auto h-[70vh]">
 
             <h2 class="font-bold text-4xl pt-4 pb-4">Program</h2>
+            <p>Always end program with move_to!</p>
 
             <Form v-slot="{setValues}" @submit="(values) => saveCodeToDB(values)">
               <div
@@ -377,6 +393,9 @@ socket.on('angles_data', (data) => {
 const onTheta1Stop = () => {
   socket.emit('send-command', {name: 'stop_theta1', body: {}});
 };
+const onTheta2Stop = () => {
+  socket.emit('send-command', {name: 'stop_theta2', body: {}});
+};
 const onTheta3Stop = () => {
   socket.emit('send-command', {name: 'stop_theta3', body: {}});
 };
@@ -386,12 +405,19 @@ const onTheta1Plus = () => {
 const onTheta1Minus = () => {
   socket.emit('send-command', {name: 'theta1-', body: {}});
 };
+const onTheta2Plus = () => {
+  socket.emit('send-command', {name: 'theta2+', body: {}});
+};
+const onTheta2Minus = () => {
+  socket.emit('send-command', {name: 'theta2-', body: {}});
+};
 const onTheta3Plus = () => {
   socket.emit('send-command', {name: 'theta3+', body: {}});
 };
 const onTheta3Minus = () => {
   socket.emit('send-command', {name: 'theta3-', body: {}});
 };
+
 const updateValues = () => {
   theta1.value = Math.round(Number(serverResponse.value.theta1) * 100) / 100;
   theta2.value = Math.round(Number(serverResponse.value.theta2) * 100) / 100;
