@@ -11,19 +11,19 @@ class MotorMonitoringThread:
             self, 
             socketio_instance: SocketIO,
             motor1_controller: MotorController, 
-            # motor2_controller: MotorController,
+            motor2_controller: MotorController,
             motor3_controller: MotorController
     ) -> None:
         self.motor1_controller = motor1_controller
-        # self.motor2_controller = motor2_controller
+        self.motor2_controller = motor2_controller
         self.motor3_controller = motor3_controller
         self.socketio_instance = socketio_instance
         
     def get_angles(self):
         log = {
             'theta1': self.motor1_controller.get_current_angle(),
-            # 'theta2': self.motor2_controller.get_current_angle(),
-            'theta2': 90,
+            'theta2': self.motor2_controller.get_current_angle(),
+            # 'theta2': 90,
             'theta3': self.motor3_controller.get_current_angle(),
         }
         return log

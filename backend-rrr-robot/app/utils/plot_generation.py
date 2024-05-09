@@ -30,37 +30,6 @@ def plot_angles(theta1, theta2, theta3, total_time, file_name='angles_over_time'
     plt.grid(True)
     plt.savefig(f"{file_name}.png")
     plt.show()
-
-
-# def plot_velocity(x, y, z, step_size, file_name='velocity_over_time'):
-#     # Calculate velocities using the separated function
-#     vx, vy, vz = calculate_velocity(x, y, z, step_size)
-    
-#     # Determine the maximum velocity to scale to percentage
-#     # max_velocity = max(np.max(np.abs(vx)), np.max(np.abs(vy)), np.max(np.abs(vz)))
-    
-#     # Normalize velocities to a percentage of the maximum velocity
-#     # vx_percent = (vx / max_velocity) * 100
-#     # vy_percent = (vy / max_velocity) * 100
-#     # vz_percent = (vz / max_velocity) * 100
-    
-#     vx_percent = vx
-#     vy_percent = vy
-#     vz_percent = vz
-    
-#     # Plot the velocities
-#     t = np.linspace(0, len(x) * step_size, len(vx))  # actual time in seconds
-#     plt.figure(figsize=(10, 6))
-#     plt.plot(t, vx_percent, label='X Velocity (%)', color='red')
-#     plt.plot(t, vy_percent, label='Y Velocity (%)', color='blue')
-#     plt.plot(t, vz_percent, label='Z Velocity (%)', color='black')
-#     plt.xlabel('Time (seconds)')
-#     plt.ylabel('Velocity (%)')
-#     plt.title('Velocity Over Time (Percentage)')
-#     plt.legend()
-#     plt.grid(True)  # Enable grid lines
-#     plt.savefig(f"{file_name}.png")  # Save the plot as a PNG file
-#     plt.show()
     
     
 def plot_velocity_with_calculated_velocitites(x, vx, vy, vz, step_size, file_name='velocity_over_time'):

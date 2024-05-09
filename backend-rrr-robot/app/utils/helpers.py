@@ -3,6 +3,28 @@ import numpy as np
 import math
 
 
+def percent_to_value(percent):
+    """
+    Convert a percentage to a value between 0 and 65535.
+    Args: percent (float): The percentage (0.0 - 100.0).
+    Returns: int: The corresponding value in the range 0 to 65535.
+    """
+    if percent < 0:
+        percent = 0
+    elif percent > 100:
+        percent = 100
+
+    value = int((percent / 100) * 65535)
+    return value
+
+
+def decimal_to_hex(decimal_number):
+    if isinstance(decimal_number, int):
+        return hex(decimal_number)
+    else:
+        raise ValueError("Input must be an integer.")
+
+
 def degrees_to_radians(degrees: float):
     radians = degrees * (math.pi / 180)
     return radians

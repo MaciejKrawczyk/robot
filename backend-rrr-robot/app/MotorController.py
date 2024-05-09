@@ -17,19 +17,21 @@ def get_filename_datetime():
 
 
 class MotorController:
-    def __init__(self, motor: MotorEncoderCombo):
+    def __init__(self, motor: MotorEncoderCombo, is_holding_enabled=True):
         self.motor = motor
         self.Kp = 3.00
         self.Ki = 0.00
         self.Kd = 0.00
         self.target_angle = self.get_current_angle()
         self.holding_position = True
+        self.is_holding_position_enabled = is_holding_enabled
 
     def get_current_angle(self):
         return self.motor.get_angle()
 
-    def run(self, direction, percent_of_power=100):
-        self.stop_holding_position()
+    def run(self, direction, percent_of_power=50):
+        if self.is_holding_position_enabled:
+            self.stop_holding_position()
         self.motor.run_motor(direction=direction, percent_of_power=percent_of_power)
 
     def start_holding_position(self, motor_id=''):
@@ -46,11 +48,13 @@ class MotorController:
         self.motor.stop()
 
     def sleep(self, seconds, motor_id=''):
-        self.start_holding_position()
+        if self.is_holding_position_enabled:
+            self.start_holding_position()
         start_time = time.time()  # Start time for reference
         print(f'[MOTOR{motor_id} SLEEP STARTED] Seconds: {seconds}')
-        time.sleep(seconds) 
-        self.stop_holding_position()
+        time.sleep(seconds)
+        if self.is_holding_position_enabled:
+            self.stop_holding_position()
         print(f'[MOTOR{motor_id} SLEEP FINISHED] Real break time: {time.time() - start_time:.2f}')
 
     def hold_position(self):
@@ -90,7 +94,8 @@ class MotorController:
             time.sleep(0.01)
 
     def run_using_pid_control(self, target_angles, motor_id='', is_last=False):
-        self.stop_holding_position()
+        if self.is_holding_position_enabled:
+            self.stop_holding_position()
         # Ensure directory exists
         directory = 'motor_data'
         os.makedirs(directory, exist_ok=True)
@@ -155,7 +160,8 @@ class MotorController:
                 file.write(f"{time_point},{actual_angle},{target_angle},{pid_output}\n")
 
         if is_last:
-            self.start_holding_position()
+            if self.is_holding_position_enabled:
+                self.start_holding_position()
 
 
     def run_using_velocities_array_no_pid(self, velocities, target_angles, motor_id=''):
