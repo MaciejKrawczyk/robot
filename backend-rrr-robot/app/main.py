@@ -1,19 +1,22 @@
-from flask import jsonify, request
+from flask import jsonify, send_file, make_response
 import time
 from flask_cors import cross_origin
-from RRRRobotAPI2 import RobotAPI
-from threads.MotorMonitoringThread import MotorMonitoringThread
-from threads.MotorThread import MotorThread
-from threads.MotorHoldingThread import MotorHoldingThread
+from modules.robot.RRRRobotAPI2 import RobotAPI
+from modules.robot.threads.MotorMonitoringThread import MotorMonitoringThread
+from modules.robot.threads.MotorThread import MotorThread
+from modules.robot.threads.MotorHoldingThread import MotorHoldingThread
 import json
-import numpy as np
 from routes.routes import api
 from services import position, robot_code
-from utils.helpers import calculate_velocity, get_filename_datetime
+from utils.helpers import calculate_velocity, get_filename_datetime, transform_to_numpy
 from utils.plot_generation import plot_angles, plot_positions, plot_angle_velocity, plot_all_motor_data
 from utils.bezier_trajectory import bezier, add_points
 from app import create_app
 from models import position
+from config import config
+import io
+from zipfile import ZipFile
+import os
 
 
 app, socketio = create_app()
@@ -25,9 +28,8 @@ motor1_controller = robotAPI.motor1_controller
 motor2_controller = robotAPI.motor2_controller 
 motor3_controller = robotAPI.motor3_controller
 
-
 motor1_holding_thread = MotorHoldingThread(socketio, motor1_controller, 1)
-motor2_holding_thread = MotorHoldingThread(socketio, motor3_controller, 2)
+motor2_holding_thread = MotorHoldingThread(socketio, motor2_controller, 2)
 motor3_holding_thread = MotorHoldingThread(socketio, motor3_controller, 3)
 
 motor1_thread = MotorThread(socketio, motor1_controller, 1, motor1_holding_thread, is_holding_enabled=True)
@@ -39,18 +41,6 @@ motor_monitoring_thread = MotorMonitoringThread(
     motor2_controller=motor2_controller,
     motor3_controller=motor3_controller
 )
-
-
-def transform_to_numpy(points):
-    x_coords = [point['x'] for point in points]
-    y_coords = [point['y'] for point in points]
-    z_coords = [point['z'] for point in points]
-    
-    # Stack these lists vertically into a NumPy array
-    numpy_array = np.array([x_coords, y_coords, z_coords])
-    
-    return numpy_array
-
 
 def calculate_run(movements):
     
@@ -104,11 +94,22 @@ def calculate_run(movements):
     return run
 
 
+
 @app.route('/api/plot', methods=['POST'])
-@cross_origin()
-def plot_motor_data():
+def download_images():
     plot_all_motor_data()
-    return jsonify({'message': 'done'})
+    return {"message": "ok"}
+
+
+
+@app.route('/api/stop', methods=['POST'])
+@cross_origin()
+def stop_run():
+    motor1_thread.send_command({"name": "stop_theta1"})
+    motor2_thread.send_command({"name": "stop_theta2"})
+    motor3_thread.send_command({"name": "stop_theta3"})
+    return {"message": "run stopped"}
+
 
 @app.route('/api/run', methods=['POST'])
 @cross_origin()
@@ -147,7 +148,6 @@ def run():
             sleeps.append(int(command['body']))
             movements.append({'sleep': int(command['body'])})
             
-    # movement['is_last'] = True
     movements.append(movement)
 
     run = calculate_run(movements)
@@ -167,6 +167,7 @@ def run():
     return {'movements': movements, 'sleeps': sleeps}
 
 
+
 ##
 ## socket
 ##
@@ -184,52 +185,27 @@ def handle_command(command_object):
 
     match command_name:
         case 'stop_theta1':
-            motor1_thread.send_command(command_name)
+            motor1_thread.send_command(command_object)
         case 'stop_theta2':
-            motor2_thread.send_command(command_name)
+            motor2_thread.send_command(command_object)
         case 'stop_theta3':
-            motor3_thread.send_command(command_name)
+            motor3_thread.send_command(command_object)
         case 'theta1+':
-            motor1_thread.send_command(command_name)
+            motor1_thread.send_command(command_object)
         case 'theta1-':
-            motor1_thread.send_command(command_name)
+            motor1_thread.send_command(command_object)
         case 'theta2+':
-            motor2_thread.send_command(command_name)
+            motor2_thread.send_command(command_object)
         case 'theta2-':
-            motor2_thread.send_command(command_name)
+            motor2_thread.send_command(command_object)
         case 'theta3+':
-            motor3_thread.send_command(command_name)
+            motor3_thread.send_command(command_object)
         case 'theta3-':
-            motor3_thread.send_command(command_name)
+            motor3_thread.send_command(command_object)
         # case _:
         
     print(f'received command: {command_object}')
 
-
-@app.route('/api/exec-program', methods=['POST'])
-def exec_program():
-    
-    if not request.is_json:
-        return jsonify({"error": "Request must be json"})
-
-    commands = request.get_json()
-    
-    for command in commands:
-        
-        name = command['name']
-        body = command['body']
-        
-        match name:
-            case 'sleep':
-                if (body['seconds'] != None):
-                    time.sleep(body['seconds'])
-                    pass
-
-            case 'move':
-                if (body['x'] is not None and body['y'] is not None and body['z'] is not None):
-                    time.sleep(2) # placeholder
-                    pass            
-    
 
 
 def start_all_threads():
@@ -238,9 +214,10 @@ def start_all_threads():
     motor3_thread.start_thread()
     motor_monitoring_thread.start_thread()
     
-    # motor1_holding_thread.start_thread()
-    # motor2_holding_thread.start_thread()
-    # motor3_holding_thread.start_thread()
+    if config['ENABLE_HOLDING_THREAD']:
+        motor1_holding_thread.start_thread()
+        motor2_holding_thread.start_thread()
+        motor3_holding_thread.start_thread()
     
     print('started all threads...')
 

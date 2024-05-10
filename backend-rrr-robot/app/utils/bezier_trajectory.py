@@ -3,69 +3,6 @@ from .helpers import pol2cart, cart2pol, radians_to_degrees
 import math
 from .kinematics import forward_kinematics
 
-# def add_points(points, calm):
-#     x1 = points[0, :]
-#     y1 = points[1, :]
-#     z1 = points[2, :]
-    
-#     distx = x1[1] - x1[0]
-#     disty = y1[1] - y1[0]
-#     distz = z1[1] - z1[0]
-    
-#     x = np.zeros(points.shape[1] * 3)
-#     y = np.zeros(points.shape[1] * 3)
-#     z = np.zeros(points.shape[1] * 3)
-    
-#     for i in range(points.shape[1]):
-#         x[i*3] = x1[i]
-#         y[i*3] = y1[i]
-#         z[i*3] = z1[i]
-
-#     TH, R, Z = cart2pol(distx, disty, distz)
-#     TH += calm * np.pi / 4
-#     R *= 0.4 * calm
-#     Z *= 0.4 * calm
-#     a, b, c = pol2cart(TH, R, Z)
-    
-#     x[1] = a + x1[0]
-#     y[1] = b + y1[0]
-#     z[1] = c + z1[0]
-    
-#     # Calculate for the last point
-#     distx = x1[-1] - x1[-2]
-#     disty = y1[-1] - y1[-2]
-#     distz = z1[-1] - z1[-2]
-    
-#     TH, R, Z = cart2pol(distx, disty, distz)
-#     TH -= calm * np.pi / 4
-#     R *= 0.4 * calm
-#     Z *= 0.4 * calm
-#     a, b, c = pol2cart(TH, R, Z)
-    
-#     x[-2] = x1[-1] - a
-#     y[-2] = y1[-1] - b
-#     z[-2] = z1[-1] - c
-    
-#     # Calculate for intermediate points
-#     for i in range(1, points.shape[1] - 1):
-#         distx = (x1[i + 1] - x1[i - 1]) / 2
-#         disty = (y1[i + 1] - y1[i - 1]) / 2
-#         distz = (z1[i + 1] - z1[i - 1]) / 2
-#         TH, R, Z = cart2pol(distx, disty, distz)
-#         TH *= (-1)**(i+1) * calm * np.pi / 2
-#         R *= 0.3 * calm
-#         Z *= 0.3 * calm
-#         a, b, c = pol2cart(TH, R, Z)
-        
-#         x[3*i-2] = x1[i] - a
-#         y[3*i-2] = y1[i] - b
-#         z[3*i-2] = z1[i] - c
-        
-#         x[3*i] = x1[i] + a
-#         y[3*i] = y1[i] + b
-#         z[3*i] = z1[i] + c
-        
-#     return x, y, z
 
 def cart2pol(x, y, z):
     rho = np.sqrt(x**2 + y**2 + z**2)
@@ -146,10 +83,6 @@ def wrap_angle(angle):
     return (angle + np.pi) % (2 * np.pi)
 
 
-# def degrees_to_radians(degrees: float):
-#     radians = degrees * (math.pi / 180)
-#     return radians
-
 
 def inverse_kinematics_numpy(x, y, z, l1=14, l2=9, l3=9):
     h = l1
@@ -166,12 +99,6 @@ def inverse_kinematics_numpy(x, y, z, l1=14, l2=9, l3=9):
     theta2 = fi2 + fi1
     fi3 = np.arccos(np.clip((r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2), -1.0, 1.0))
     theta3 = fi3 - np.pi
-
-
-    # if  (L2 ** 2 - L1 ** 2 - r3 ** 2) / (-2 * L1 * r3) < -1  or (r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2) < -1:
-    #     theta1 = theta1 + 180
-    # elif (L2 ** 2 - L1 ** 2 - r3 ** 2) / (-2 * L1 * r3) > 1 or (r3 ** 2 - L1 ** 2 - L2 ** 2) / (-2 * L1 * L2) > 1:
-    #     theta1 = theta1 - 180
 
     angles = (
         radians_to_degrees(theta1),
@@ -323,12 +250,5 @@ def bezier(X, Y, Z, speed):
         z = np.concatenate([z, curve_z])
 
     theta1, theta2, theta3 = check_quarters_of_x(x,y,z)
-
-    # angles = np.array([inverse_kinematics_numpy(x[i], y[i], z[i]) for i in range(len(x))])
-    
-    # angles = np.array([inverse_kinematics_numpy(updated_x[i], updated_y[i], updated_z[i]) for i in range(len(x))])
-    # theta1 = angles[:, 0]
-    # theta2 = angles[:, 1]
-    # theta3 = angles[:, 2]
     
     return x, y, z, theta1, theta2, theta3

@@ -3,6 +3,14 @@ import numpy as np
 import math
 
 
+def transform_to_numpy(points):
+    x_coords = [point['x'] for point in points]
+    y_coords = [point['y'] for point in points]
+    z_coords = [point['z'] for point in points]
+    numpy_array = np.array([x_coords, y_coords, z_coords])
+    return numpy_array
+
+
 def percent_to_value(percent):
     """
     Convert a percentage to a value between 0 and 65535.
@@ -56,17 +64,8 @@ def get_filename_datetime():
 
 
 def calculate_velocity(x, y, z, step_size):
-    # print(x)
-    # print(y)
-    # Calculate velocity components for each dimension
     vx = np.gradient(x, step_size)
     vy = np.gradient(y, step_size)
     vz = np.gradient(z, step_size)
     
-    # max_velocity = max(np.max(np.abs(vx)), np.max(np.abs(vy)), np.max(np.abs(vz)))
-    # vx_percent = (vx / max_velocity) * 100
-    # vy_percent = (vy / max_velocity) * 100
-    # vz_percent = (vz / max_velocity) * 100
-    
     return vx, vy, vz
-    # return vx_percent, vy_percent, vz_percent
