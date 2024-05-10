@@ -62,6 +62,13 @@
               </div>
             </div>
 
+            <br>
+
+            <div class="gap-2.5 flex items-center">
+              <Button @click.prevent="percentOfPower = Math.min(percentOfPower + 10, 100)">+</Button>
+              <span>{{ percentOfPower }}</span>
+              <Button @click.prevent="percentOfPower = Math.max(percentOfPower - 10, 20)">-</Button>
+            </div>
 
           </TabsContent>
 
@@ -158,8 +165,22 @@
             </Form>
 
             <!--            <DrawerTrigger as-child>-->
-            <Button class="mt-5 mb-5 rounded-full w-[80px] h-[80px]" @click.prevent="runProgram">
-              <Play/>
+            <Button
+                class="mt-5 mb-5 rounded-full w-[80px] h-[80px]"
+                @click.prevent="runProgram"
+                :disabled="isRunProgramLoading"
+            >
+              <Loader2 class="animate-spin" v-if="isRunProgramLoading"/>
+              <Play v-if="!isRunProgramLoading"/>
+            </Button>
+
+            <Button
+                class="mt-5 mb-5 rounded-full w-[80px] h-[80px] ml-5"
+                @click.prevent="generatePlots"
+                :disabled="isGeneratePlotsLoading"
+            >
+              <Loader2 class="animate-spin" v-if="isGeneratePlotsLoading"/>
+              <AreaChart v-if="!isGeneratePlotsLoading"/>
             </Button>
             <!--            </DrawerTrigger>-->
 
@@ -339,7 +360,7 @@
 <script setup lang="ts">
 import {Form, FormField, FormItem} from '@/components/ui/form'
 import {Skeleton} from '@/components/ui/skeleton'
-import {Play, Plus, Save, Trash2} from 'lucide-vue-next'
+import {Play, Plus, Save, Trash2, AreaChart, Loader2} from 'lucide-vue-next'
 import {
   Select,
   SelectContent,
@@ -372,7 +393,14 @@ import DoneSmall from "@/components/DoneSmall.vue";
 
 
 const socket = io('http://localhost:5000');
-let serverResponse = ref({});
+let serverResponse = ref<never | {
+  x: number,
+  y: number,
+  z: number,
+  theta1: number,
+  theta2: number,
+  theta3: number
+}>(undefined)
 const isConnected = ref<boolean>(false);
 
 const theta1 = ref<undefined | number>(undefined);
@@ -381,6 +409,8 @@ const theta3 = ref<undefined | number>(undefined);
 const x = ref<undefined | number>(undefined);
 const y = ref<undefined | number>(undefined);
 const z = ref<undefined | number>(undefined);
+
+const percentOfPower = ref<number>(100)
 
 // socket.on('connect', () => {
 //
@@ -400,22 +430,22 @@ const onTheta3Stop = () => {
   socket.emit('send-command', {name: 'stop_theta3', body: {}});
 };
 const onTheta1Plus = () => {
-  socket.emit('send-command', {name: 'theta1+', body: {}});
+  socket.emit('send-command', {name: 'theta1+', body: {power: percentOfPower.value}});
 };
 const onTheta1Minus = () => {
-  socket.emit('send-command', {name: 'theta1-', body: {}});
+  socket.emit('send-command', {name: 'theta1-', body: {power: percentOfPower.value}});
 };
 const onTheta2Plus = () => {
-  socket.emit('send-command', {name: 'theta2+', body: {}});
+  socket.emit('send-command', {name: 'theta2+', body: {power: percentOfPower.value}});
 };
 const onTheta2Minus = () => {
-  socket.emit('send-command', {name: 'theta2-', body: {}});
+  socket.emit('send-command', {name: 'theta2-', body: {power: percentOfPower.value}});
 };
 const onTheta3Plus = () => {
-  socket.emit('send-command', {name: 'theta3+', body: {}});
+  socket.emit('send-command', {name: 'theta3+', body: {power: percentOfPower.value}});
 };
 const onTheta3Minus = () => {
-  socket.emit('send-command', {name: 'theta3-', body: {}});
+  socket.emit('send-command', {name: 'theta3-', body: {power: percentOfPower.value}});
 };
 
 const updateValues = () => {
@@ -437,6 +467,7 @@ const loading = ref<boolean>(false)
 const isLoadingRunProgram = ref(false)
 
 const code = ref<Command[]>([])
+
 
 onMounted(() => {
   fetchPositionsFromDB()
@@ -508,9 +539,32 @@ const removeCommand = (id: number) => {
   code.value = code.value.filter(cmd => cmd.id !== id);
 };
 
+const isProgramRunning = ref(false)
+const isRunProgramLoading = ref(false)
 const runProgram = async () => {
-  isLoadingRunProgram.value = true
+  isRunProgramLoading.value = true
   const url = 'http://localhost:5000/api/run'
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    isProgramRunning.value = true
+    return await response.json()
+  } catch (e) {
+
+  } finally {
+    isRunProgramLoading.value = false
+  }
+}
+
+const isRunEmergencyStopLoading = ref(false)
+const runEmergencyStop = async () => {
+  isRunEmergencyStopLoading.value = true
+  const url = 'http://localhost:5000/api/stop'
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -523,24 +577,27 @@ const runProgram = async () => {
   } catch (e) {
 
   } finally {
-    isLoadingRunProgram.value = false
+    isRunEmergencyStopLoading.value = false
   }
 }
 
-const emergencyStopProgram = async () => {
-
-}
-
+const isGeneratePlotsLoading = ref(false)
 const generatePlots = async () => {
   const url = 'http://localhost:5000/api/plot'
-  const response = await fetch(url, {
-    method: "POST",
-  })
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`);
-  }
+  try {
+    isGeneratePlotsLoading.value = true
+    const response = await fetch(url, {
+      method: "POST",
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return await response.json()
+  } catch (e) {
 
-  return await response.json()
+  } finally {
+    isGeneratePlotsLoading.value = false
+  }
 }
 
 const fetchCodeFromDB = async () => {
