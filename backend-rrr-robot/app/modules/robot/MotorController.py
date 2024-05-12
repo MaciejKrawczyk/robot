@@ -19,9 +19,9 @@ class MotorController:
     def __init__(self, motor: MotorEncoderCombo_i2c, id, is_holding_enabled=True):
         self.id = id
         self.motor = motor
-        self.Kp = 3
-        self.Ki = 2.2
-        self.Kd = 0.00
+        self.Kp = 4
+        self.Ki = 2
+        self.Kd = 1.11111
         self.target_angle = self.get_current_angle()
         self.holding_position = True
         self.is_holding_position_enabled = is_holding_enabled
