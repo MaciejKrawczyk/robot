@@ -10,13 +10,15 @@ from routes.routes import api
 from services import position, robot_code
 from utils.helpers import calculate_velocity, get_filename_datetime, transform_to_numpy
 from utils.plot_generation import plot_angles, plot_positions, plot_angle_velocity, plot_all_motor_data
-from utils.bezier_trajectory import bezier, add_points
+from utils.bezier_trajectory import bezier, add_points, inverse_kinematics_numpy
 from app import create_app
 from models import position
 from config import config
 import io
 from zipfile import ZipFile
 import os
+import numpy as np
+
 
 
 app, socketio = create_app()
@@ -57,9 +59,19 @@ def calculate_run(movements):
             
             numpy_notation_movement_list = transform_to_numpy(movement)
 
+            # print(numpy_notation_movement_list)
+            
             X, Y, Z = add_points(numpy_notation_movement_list, cnt)
             
             x, y, z, theta1, theta2, theta3 = bezier(X, Y, Z, step)
+            # curve = bezier(numpy_notation_movement_list, step)
+            # x = curve[:, 0]
+            # y = curve[:, 1]
+            # z = curve[:, 2]
+            # angles = np.array([inverse_kinematics_numpy(x[i], y[i], z[i]) for i in range(len(x))])
+            # theta1 = angles[:, 0]
+            # theta2 = angles[:, 1]
+            # theta3 = angles[:, 2]
 
             vtheta1, vtheta2, vtheta3 = calculate_velocity(theta1, theta2, theta3, step)
 

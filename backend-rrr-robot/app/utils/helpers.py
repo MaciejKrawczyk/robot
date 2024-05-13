@@ -4,9 +4,9 @@ import math
 
 
 def transform_to_numpy(points):
-    x_coords = [point['x'] for point in points]
-    y_coords = [point['y'] for point in points]
-    z_coords = [point['z'] for point in points]
+    x_coords = [round(point['x'], 2) for point in points]
+    y_coords = [round(point['y'], 2) for point in points]
+    z_coords = [round(point['z'], 2) for point in points]
     numpy_array = np.array([x_coords, y_coords, z_coords])
     return numpy_array
 

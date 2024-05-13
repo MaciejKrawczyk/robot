@@ -2,7 +2,8 @@ import numpy as np
 from .helpers import pol2cart, cart2pol, radians_to_degrees
 import math
 from .kinematics import forward_kinematics
-
+from modules.bezier.Bezier import Bezier
+from config import Config
 
 def cart2pol(x, y, z):
     rho = np.sqrt(x**2 + y**2 + z**2)
@@ -83,6 +84,18 @@ def wrap_angle(angle):
     return (angle + np.pi) % (2 * np.pi)
 
 
+def check_if_point_in_degrees_in_workspace(theta1, theta2, theta3):
+    theta1_lengths = (0, 360)
+    theta2_lengths = (-45, 90)
+    theta3_lengths = (-135, 0)
+    
+    if theta1 > theta1_lengths[0] and theta1 < theta1_lengths[1]:
+        if theta2 > theta2_lengths[0] and theta2 < theta2_lengths[1]:
+            if theta3 > theta3_lengths[0] and theta3 < theta3_lengths[1]:
+                return True
+    else:
+        return False
+
 
 def inverse_kinematics_numpy(x, y, z, l1=14, l2=9, l3=9):
     h = l1
@@ -148,6 +161,9 @@ def check_if_negative(number: float):
     else:
         return False
 
+def has_zero_between(a, b):
+    return a * b < 0
+
 def check_quarters_of_x(list_of_x_values, list_of_y_values, list_of_z_values):
     
     is_quarter_from_I_II = False
@@ -156,6 +172,9 @@ def check_quarters_of_x(list_of_x_values, list_of_y_values, list_of_z_values):
     is_quarter_from_II_to_I = False
     is_quarter_from_III_to_II = False
     is_quarter_from_IV_to_III = False
+    
+    has_x_went_from_minus_to_plus = False
+    has_x_went_from_plus_to_minus = False
     
     angles = np.array([inverse_kinematics_numpy(list_of_x_values[i], list_of_y_values[i], list_of_z_values[i]) for i in range(len(list_of_x_values))])
     list_of_theta1 = angles[:, 0]
@@ -221,7 +240,19 @@ def check_quarters_of_x(list_of_x_values, list_of_y_values, list_of_z_values):
         if is_quarter_from_II_to_I:
             list_of_theta1[i] = list_of_theta1[i] - 360.0
         
+        # if has_zero_between(previous_x, current_x):
+        #     if previous_x > current_x:
+        #         has_x_went_from_plus_to_minus = True
+        #         has_x_went_from_minus_to_plus = False
+        #     else:
+        #         has_x_went_from_plus_to_minus = False
+        #         has_x_went_from_minus_to_plus = True
         
+        # if has_x_went_from_minus_to_plus:
+        #     list_of_theta1[i] = list_of_theta1[i] + 360.0
+        
+        # if has_x_went_from_plus_to_minus:
+        #     list_of_theta1[i] = list_of_theta1[i] - 360.0
         
         
     return list_of_theta1, list_of_theta2, list_of_theta3
@@ -252,3 +283,9 @@ def bezier(X, Y, Z, speed):
     theta1, theta2, theta3 = check_quarters_of_x(x,y,z)
     
     return x, y, z, theta1, theta2, theta3
+
+# def bezier(numpy_notation_list,speed=0.01):
+#     t_points = np.arange(0,2,speed)
+#     correct_points = numpy_notation_list.T
+#     curve = Bezier.Curve(t_points, correct_points)
+#     return curve
