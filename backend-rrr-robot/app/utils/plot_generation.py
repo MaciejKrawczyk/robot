@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from .kinematics import inverse_kinematics3
+from types_global import PointXYZ
 
 
 def plot_positions(x, y, z, total_time, file_name='position_over_time'):
@@ -154,3 +156,181 @@ def plot_all_motor_data(directory='motor_data'):
         plot_filename = os.path.join(plot_directory, f"{date_time}_all_motors_plot.png")
         plt.savefig(plot_filename)
         plt.close()
+        
+        
+        
+# def read_coordinates(file_path):
+#     with open(file_path, 'r') as file:
+#         coordinates = file.readline().strip().split(',')
+#         coordinates = [float(coord) for coord in coordinates]
+#     return coordinates
+
+# def plot_3d_curve(x_file, y_file, z_file):
+#     x = read_coordinates(x_file)
+#     y = read_coordinates(y_file)
+#     z = read_coordinates(z_file)
+
+#     fig = plt.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+
+#     ax.plot(x, y, z, label='3D Curve')
+#     ax.set_xlabel('X Coordinate')
+#     ax.set_ylabel('Y Coordinate')
+#     ax.set_zlabel('Z Coordinate')
+#     ax.legend()
+
+#     plt.savefig('figdif')
+#     plt.show()
+
+# # Example usage
+# plot_3d_curve(
+#     'motor_data/2024-05-17_15-45-35_motor1_data.txt', 
+#     'motor_data/2024-05-17_15-45-35_motor2_data.txt', 
+#     'motor_data/2024-05-17_15-45-35_motor3_data.txt'
+#     )
+
+
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
+
+
+def plot_bezier_curve_and_control_points(trajectory, control_points):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot the Bézier curve
+    xs = [point.x for point in trajectory]
+    ys = [point.y for point in trajectory]
+    zs = [point.z for point in trajectory]
+    ax.scatter(xs, ys, zs, label='Bézier Curve', c='blue')
+
+    # Plot control points
+    cp_xs = [control_points.A.x, control_points.B.x, control_points.C.x, control_points.D.x]
+    cp_ys = [control_points.A.y, control_points.B.y, control_points.C.y, control_points.D.y]
+    cp_zs = [control_points.A.z, control_points.B.z, control_points.C.z, control_points.D.z]
+
+    ax.scatter(cp_xs, cp_ys, cp_zs, color='red')
+    for i, txt in enumerate(['A', 'B', 'C', 'D']):
+        ax.text(cp_xs[i], cp_ys[i], cp_zs[i], txt, color='red')
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_title('Bézier Curve and Control Points')
+    ax.legend()
+    plt.show()
+
+
+def plot_combined_curve_and_workspace(trajectory, control_points):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot the Bézier curve
+    xs = [point.x for point in trajectory]
+    ys = [point.y for point in trajectory]
+    zs = [point.z for point in trajectory]
+    ax.scatter(xs, ys, zs, label='Bézier Curve', c='blue')
+
+    # Plot control points
+    cp_xs = [control_points.A.x, control_points.B.x, control_points.C.x, control_points.D.x]
+    cp_ys = [control_points.A.y, control_points.B.y, control_points.C.y, control_points.D.y]
+    cp_zs = [control_points.A.z, control_points.B.z, control_points.C.z, control_points.D.z]
+
+    ax.scatter(cp_xs, cp_ys, cp_zs, color='red')
+    for i, txt in enumerate(['A', 'B', 'C', 'D']):
+        ax.text(cp_xs[i], cp_ys[i], cp_zs[i], txt, color='red')
+
+    # Generate workspace points
+    num_samples_theta1 = 50
+    num_samples_theta2 = 20
+    num_samples_theta3 = 20
+    theta1_vals = np.linspace(*joint_limits[0], num_samples_theta1)
+    theta2_vals = np.linspace(*joint_limits[1], num_samples_theta2)
+    theta3_vals = np.linspace(*joint_limits[2], num_samples_theta3)
+
+    x, y, z = [], [], []
+
+    # Calculate positions for all combinations of joint angles
+    for i, theta1 in enumerate(theta1_vals):
+        if i % 2 == 0:  # Take every second value of theta1
+            for theta2 in theta2_vals:
+                for theta3 in theta3_vals:
+                    pos = forward_kinematics(theta1, theta2, theta3)
+                    x.append(pos[0])
+                    y.append(pos[1])
+                    z.append(pos[2])
+
+    # Plot the workspace points
+    ax.scatter(x, y, z, c='r', marker='o', s=0.1, label='Workspace')
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_title('Workspace of the RRR Manipulator with Bézier Curve')
+    ax.legend()
+    plt.show()
+
+
+def plot_theta_changes(trajectory):
+    thetas = [inverse_kinematics3(point.x, point.y, point.z) for point in trajectory]
+
+    for theta in thetas:
+        print(theta)
+
+    theta1_vals = [theta.theta1 for theta in thetas]
+    theta2_vals = [theta.theta2 for theta in thetas]
+    theta3_vals = [theta.theta3 for theta in thetas]
+
+    t_vals = np.arange(0, 1.01, 0.01)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 15))
+
+    ax1.plot(t_vals, theta1_vals, label='Theta 1')
+    ax1.set_xlabel('t')
+    ax1.set_ylabel('Theta 1')
+    ax1.legend()
+
+    ax2.plot(t_vals, theta2_vals, label='Theta 2')
+    ax2.set_xlabel('t')
+    ax2.set_ylabel('Theta 2')
+    ax2.legend()
+
+    ax3.plot(t_vals, theta3_vals, label='Theta 3')
+    ax3.set_xlabel('t')
+    ax3.set_ylabel('Theta 3')
+    ax3.legend()
+
+    plt.show()
+
+
+def plot_XYZ_changes(trajectory):
+    thetas = [PointXYZ(point.x, point.y, point.z) for point in trajectory]
+
+    # for theta in thetas:
+    #     print(theta)
+    #
+    theta1_vals = [theta.x for theta in thetas]
+    theta2_vals = [theta.y for theta in thetas]
+    theta3_vals = [theta.z for theta in thetas]
+
+    t_vals = np.arange(0, 1.01, 0.01)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 15))
+
+    ax1.plot(t_vals, theta1_vals, label='X')
+    ax1.set_xlabel('t')
+    ax1.set_ylabel('X')
+    ax1.legend()
+
+    ax2.plot(t_vals, theta2_vals, label='Y')
+    ax2.set_xlabel('t')
+    ax2.set_ylabel('Y')
+    ax2.legend()
+
+    ax3.plot(t_vals, theta3_vals, label='Z')
+    ax3.set_xlabel('t')
+    ax3.set_ylabel('Z')
+    ax3.legend()
+
+    plt.show()

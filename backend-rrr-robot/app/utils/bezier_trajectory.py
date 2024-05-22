@@ -18,6 +18,9 @@ def pol2cart(phi, rho, theta):
     return x, y, z
 
 def add_points(points, calm):
+    """
+    aby dodać omijanie przeszkód, należy zmodyfikować tę funckję
+    """
     # Extract x, y, z from points array
     x1, y1, z1 = points[0, :], points[1, :], points[2, :]
     

@@ -5,7 +5,10 @@ config = {
         'L1': 14,
         'L2': 9,
         'L3': 9,
-    }
+    },
+    'THETA1_RANGES': (0, 180),
+    'THETA2_RANGES': (-45, 90),
+    'THETA3_RANGES': (-135, 0)
 }
 
 class ArmLengths:
@@ -18,5 +21,6 @@ class Config:
     def __init__(self) -> None:
         self.ENABLE_HOLDING_THREAD = True
         self.ARM_LENGTHS = ArmLengths
-
-# config_class
+        self.THETA1_RANGES = (0, 180)
+        self.THETA2_RANGES = (-45, 90)
+        self.THETA3_RANGES = (-135, 0)

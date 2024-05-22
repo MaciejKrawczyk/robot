@@ -138,6 +138,7 @@
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Time</SelectLabel>
+                          <SelectItem value="0.3">0.3s</SelectItem>  
                           <SelectItem value="1">1s</SelectItem>
                           <SelectItem value="2">2s</SelectItem>
                           <SelectItem value="3">3s</SelectItem>

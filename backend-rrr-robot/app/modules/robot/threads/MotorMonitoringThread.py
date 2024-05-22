@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 import time
 from utils.helpers import degrees_to_radians
 from utils.kinematics import forward_kinematics
+from types_global import PointThetas, RobotPosition, PointXYZ
 
 
 class MotorMonitoringThread:
@@ -20,26 +21,32 @@ class MotorMonitoringThread:
         self.socketio_instance = socketio_instance
         
     def get_angles(self):
-        log = {
-            'theta1': self.motor1_controller.get_current_angle(),
-            'theta2': self.motor2_controller.get_current_angle(),
-            'theta3': self.motor3_controller.get_current_angle(),
-        }
-        return log
+        thetas = PointThetas(
+            self.motor1_controller.get_current_angle(),
+            self.motor2_controller.get_current_angle(),
+            self.motor3_controller.get_current_angle()
+        )
+        # log = {
+        #     'theta1': self.motor1_controller.get_current_angle(),
+        #     'theta2': self.motor2_controller.get_current_angle(),
+        #     'theta3': self.motor3_controller.get_current_angle(),
+        # }
+        return thetas
     
     def get_position(self, angles):
         pos = forward_kinematics(
-            degrees_to_radians(angles['theta1']),
-            degrees_to_radians(angles['theta2']),
-            degrees_to_radians(angles['theta3']),
+            degrees_to_radians(angles.theta1),
+            degrees_to_radians(angles.theta2),
+            degrees_to_radians(angles.theta3),
         )
         return pos
         
-    def get_position_and_angles(self, pos, angles):
-        position_and_angles = dict(pos, **angles)
+    def get_position_and_angles(self, pos: PointXYZ, angles: PointThetas):
+        # position_and_angles = dict(pos, **angles)
+        position_and_angles = RobotPosition(angles.theta1, angles.theta2, angles.theta3, pos.x, pos.y, pos.z)
         return position_and_angles
     
-    def get_position_and_angles2(self,):
+    def get_position_and_angles2(self):
         angles = self.get_angles()
         pos = self.get_position(angles)
         final_data = self.get_position_and_angles(pos, angles)
@@ -52,7 +59,7 @@ class MotorMonitoringThread:
             pos = self.get_position(angles)
             final_data = self.get_position_and_angles(pos, angles)
 
-            socketio_instance.emit('angles_data', final_data)
+            socketio_instance.emit('angles_data', final_data.to_dict())
             time.sleep(0.1)
 
     

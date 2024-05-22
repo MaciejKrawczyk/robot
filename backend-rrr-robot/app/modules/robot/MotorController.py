@@ -20,8 +20,8 @@ class MotorController:
         self.id = id
         self.motor = motor
         self.Kp = 4
-        self.Ki = 2
-        self.Kd = 1.11111
+        self.Ki = 1
+        self.Kd = 0.5
         self.target_angle = self.get_current_angle()
         self.holding_position = True
         self.is_holding_position_enabled = is_holding_enabled
