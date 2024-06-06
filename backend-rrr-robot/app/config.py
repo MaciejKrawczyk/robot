@@ -8,7 +8,10 @@ config = {
     },
     'THETA1_RANGES': (0, 180),
     'THETA2_RANGES': (-45, 90),
-    'THETA3_RANGES': (-135, 0)
+    'THETA3_RANGES': (-135, 0),
+    'DEFAULT_THETA1_POSITION': 90,
+    'DEFAULT_THETA2_POSITION': 90,
+    'DEFAULT_THETA3_POSITION': 0,
 }
 
 class ArmLengths:

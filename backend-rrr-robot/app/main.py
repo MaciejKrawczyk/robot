@@ -77,7 +77,7 @@ def calculate_run(movements):
             print(x)
             print(y)
 
-            # vtheta1, vtheta2, vtheta3 = calculate_velocity(theta1, theta2, theta3, step)
+            vtheta1, vtheta2, vtheta3 = calculate_velocity(theta1, theta2, theta3, step)
 
             total_time = len(x) * step
             plot_angles(
@@ -90,11 +90,11 @@ def calculate_run(movements):
                 total_time,
                 f'calculated_motor_plots/{get_filename_datetime()}_movement_{movement_id}_position_over_time_calculated'
             )
-            # plot_angle_velocity(
-            #     vtheta1, vtheta2, vtheta3,
-            #     step, 
-            #     f'calculated_motor_plots/{get_filename_datetime()}_movement_{movement_id}_angle_velocity_over_time_calculated'
-            # )
+            plot_angle_velocity(
+                vtheta1, vtheta2, vtheta3,
+                step, 
+                f'calculated_motor_plots/{get_filename_datetime()}_movement_{movement_id}_angle_velocity_over_time_calculated'
+            )
 
             run[movement_id]['velocities']['vtheta1'] = []
             run[movement_id]['velocities']['vtheta2'] = []

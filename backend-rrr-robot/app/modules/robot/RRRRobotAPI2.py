@@ -42,13 +42,13 @@ def init_robot():
 
     # ------------
 
-    motor_theta1 = MotorEncoderCombo_i2c(MOTOR_THETA1_PLUS_INPUT_PIN, MOTOR_THETA1_MINUS_INPUT_PIN, MOTOR1_PWM_PLUS, MOTOR1_PWM_MINUS, is_minus_plus_swapped=True)
+    motor_theta1 = MotorEncoderCombo_i2c(MOTOR_THETA1_PLUS_INPUT_PIN, MOTOR_THETA1_MINUS_INPUT_PIN, MOTOR1_PWM_PLUS, MOTOR1_PWM_MINUS, starting_angle=config['DEFAULT_THETA1_POSITION'], is_minus_plus_swapped=True)
     motor_theta1_controller = MotorController(motor_theta1, is_holding_enabled=config['ENABLE_HOLDING_THREAD'], id=1)
 
-    motor_theta2 = MotorEncoderCombo_i2c(MOTOR_THETA2_PLUS_INPUT_PIN, MOTOR_THETA2_MINUS_INPUT_PIN, MOTOR2_PWM_PLUS, MOTOR2_PWM_MINUS, starting_angle=90, is_minus_plus_swapped=True)
+    motor_theta2 = MotorEncoderCombo_i2c(MOTOR_THETA2_PLUS_INPUT_PIN, MOTOR_THETA2_MINUS_INPUT_PIN, MOTOR2_PWM_PLUS, MOTOR2_PWM_MINUS, starting_angle=config['DEFAULT_THETA2_POSITION'], is_minus_plus_swapped=True)
     motor_theta2_controller = MotorController(motor_theta2, is_holding_enabled=config['ENABLE_HOLDING_THREAD'], id=2)
 
-    motor_theta3 = MotorEncoderCombo_i2c(MOTOR_THETA3_PLUS_INPUT_PIN, MOTOR_THETA3_MINUS_INPUT_PIN, MOTOR3_PWM_PLUS, MOTOR3_PWM_MINUS, is_minus_plus_swapped=True)
+    motor_theta3 = MotorEncoderCombo_i2c(MOTOR_THETA3_PLUS_INPUT_PIN, MOTOR_THETA3_MINUS_INPUT_PIN, MOTOR3_PWM_PLUS, MOTOR3_PWM_MINUS, starting_angle=config['DEFAULT_THETA3_POSITION'], is_minus_plus_swapped=True)
     motor_theta3_controller = MotorController(motor_theta3, is_holding_enabled=config['ENABLE_HOLDING_THREAD'], id=3)
 
 

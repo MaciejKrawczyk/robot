@@ -130,32 +130,46 @@ def plot_all_motor_data(directory='motor_data'):
     # Plot files grouped by date and time
     for date_time, filenames in files_by_datetime.items():
         num_files = len(filenames)
-        fig, axs = plt.subplots(num_files, 1, figsize=(10, 5 * num_files), squeeze=False)
+        fig_angle, axs_angle = plt.subplots(num_files, 1, figsize=(10, 5 * num_files), squeeze=False)
+        fig_error, axs_error = plt.subplots(num_files, 1, figsize=(10, 5 * num_files), squeeze=False)
+
         for i, filename in enumerate(filenames):
             filepath = os.path.join(directory, filename)
-            times, actual_angles, target_angles, pid_outputs = [], [], [], []
+            times, actual_angles, target_angles, pid_outputs, errors = [], [], [], [], []
             with open(filepath, 'r') as file:
                 for line in file:
-                    time_point, actual_angle, target_angle, pid_output = line.strip().split(',')
+                    time_point, actual_angle, target_angle, pid_output, error = line.strip().split(',')
                     times.append(float(time_point))
                     actual_angles.append(float(actual_angle))
                     target_angles.append(float(target_angle))
                     pid_outputs.append(float(pid_output))
+                    errors.append(float(error))
 
-            # Plotting the data in subplots
-            axs[i, 0].plot(times, actual_angles, 'o-', label='Actual Motor Angle')
-            axs[i, 0].plot(times, target_angles, 'x--', label='Target Motor Angle')
+            # Plotting the motor angle data
+            axs_angle[i, 0].plot(times, actual_angles, 'o-', label='Actual Motor Angle')
+            axs_angle[i, 0].plot(times, target_angles, 'x--', label='Target Motor Angle')
             motor_id = filename.split('_')[2]  # Adjusted to get motor_id correctly
-            axs[i, 0].set_title(f'Motor {motor_id} Angle Over Time')
-            axs[i, 0].set_xlabel('Time (seconds)')
-            axs[i, 0].set_ylabel('Motor Angle (degrees)')
-            axs[i, 0].grid(True)
-            axs[i, 0].legend()
+            axs_angle[i, 0].set_title(f'Motor {motor_id} Angle Over Time')
+            axs_angle[i, 0].set_xlabel('Time (seconds)')
+            axs_angle[i, 0].set_ylabel('Motor Angle (degrees)')
+            axs_angle[i, 0].grid(True)
+            axs_angle[i, 0].legend()
+
+            # Plotting the error data
+            axs_error[i, 0].plot(times, errors, 's-', color='red', label='Error')
+            axs_error[i, 0].set_title(f'Motor {motor_id} Error Over Time')
+            axs_error[i, 0].set_xlabel('Time (seconds)')
+            axs_error[i, 0].set_ylabel('Error')
+            axs_error[i, 0].grid(True)
+            axs_error[i, 0].legend()
 
         plt.tight_layout()
-        plot_filename = os.path.join(plot_directory, f"{date_time}_all_motors_plot.png")
-        plt.savefig(plot_filename)
-        plt.close()
+        plot_filename_angle = os.path.join(plot_directory, f"{date_time}_all_motors_angle_plot.png")
+        plot_filename_error = os.path.join(plot_directory, f"{date_time}_all_motors_error_plot.png")
+        fig_angle.savefig(plot_filename_angle)
+        fig_error.savefig(plot_filename_error)
+        plt.close(fig_angle)
+        plt.close(fig_error)
         
         
         
@@ -333,4 +347,60 @@ def plot_XYZ_changes(trajectory):
     ax3.set_ylabel('Z')
     ax3.legend()
 
+    plt.show()
+    
+    
+def plot_motor_data_msq(filename):
+    # import matplotlib.pyplot as plt
+
+    times = []
+    actual_angles = []
+    target_angles = []
+    pid_outputs = []
+    errors = []
+
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        for line in lines[1:]:
+            # if line.startswith("Mean Square Error"):
+            #     mse = float(line.split(":")[1].strip())
+            #     continue
+            time_point, actual_angle, target_angle, pid_output, error = map(float, line.split(','))
+            times.append(time_point)
+            actual_angles.append(actual_angle)
+            target_angles.append(target_angle)
+            pid_outputs.append(pid_output)
+            errors.append(error)
+    
+    plt.figure(figsize=(10, 8))
+    
+    plt.subplot(3, 1, 1)
+    plt.plot(times, actual_angles, label='Actual Angle')
+    plt.plot(times, target_angles, label='Target Angle')
+    plt.title('Motor Angles')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Angle (degrees)')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(3, 1, 2)
+    plt.plot(times, pid_outputs, label='PID Output', color='red')
+    plt.title('PID Output')
+    plt.xlabel('Time (s)')
+    plt.ylabel('PID Output')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(3, 1, 3)
+    plt.plot(times, errors, label='Error', color='green')
+    plt.title('Error Over Time')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Error (degrees)')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.tight_layout()
+    
+    plt.savefig('fsdsdfsdfsfd')
+    
     plt.show()
