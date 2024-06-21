@@ -20,6 +20,7 @@ from zipfile import ZipFile
 import os
 import numpy as np
 from types_global import RobotPosition, PointXYZ
+from subprocess import call
 
 
 
@@ -117,6 +118,14 @@ def download_images():
     plot_all_motor_data()
     return {"message": "ok"}
 
+
+@app.route('/api/turnoff', methods=['POST'])
+def exit():
+    response = call(['/home/maciek/Desktop/robot/backend-rrr-robot/app/shutdown.sh'])
+    if response == 0:
+        return {"message": "Shutdown initiated successfully."}
+    else:
+        return {"message": "Failed to initiate shutdown."}, 500
 
 
 @app.route('/api/stop', methods=['POST'])
@@ -258,4 +267,4 @@ if __name__ == '__main__':
         # db.session.commit()
         
     start_all_threads()
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000, use_reloader=False, allow_unsafe_werkzeug=True)

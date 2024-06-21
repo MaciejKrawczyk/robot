@@ -18,14 +18,18 @@
             <div class="flex flex-col gap-2">
               <div class="flex gap-1">
                 <Button
+                    :disabled="theta1 > 179"
                     @mousedown="onTheta1Plus"
                     @mouseup="onTheta1Stop"
+                    @click="theta1 > 179"
                 >
                   Theta1+
                 </Button>
                 <Button
+                    :disabled="theta1 < 1"
                     @mousedown="onTheta1Minus"
                     @mouseup="onTheta1Stop"
+                    @click="theta1 < 1"
                 >
                   Theta1-
                 </Button>
@@ -33,14 +37,18 @@
 
               <div class="flex gap-1">
                 <Button
+                    :disabled="theta2 > 89"
                     @mousedown="onTheta2Plus"
                     @mouseup="onTheta2Stop"
+                    @click="theta2 > 89"
                 >
                   Theta2+
                 </Button>
                 <Button
+                    :disabled="theta2 < -44"
                     @mousedown="onTheta2Minus"
                     @mouseup="onTheta2Stop"
+                    @click="theta2 < -44"
                 >
                   Theta2-
                 </Button>
@@ -48,14 +56,18 @@
 
               <div class="flex gap-1">
                 <Button
+                    :disabled="theta3 > -1"
                     @mousedown="onTheta3Plus"
                     @mouseup="onTheta3Stop"
+                    @click="theta3 > -1"
                 >
                   Theta3+
                 </Button>
                 <Button
+                    :disabled="theta3 < -134"
                     @mousedown="onTheta3Minus"
                     @mouseup="onTheta3Stop"
+                    @click="theta3 < -134"
                 >
                   Theta3-
                 </Button>
@@ -69,6 +81,12 @@
               <span>{{ percentOfPower }}</span>
               <Button @click.prevent="percentOfPower = Math.max(percentOfPower - 10, 20)">-</Button>
             </div>
+
+            <br>
+            <br>
+            <br>
+            
+            <Button @click.prevent="shutdown">Turn off system</Button>  
 
           </TabsContent>
 
@@ -598,6 +616,32 @@ const generatePlots = async () => {
 
   } finally {
     isGeneratePlotsLoading.value = false
+  }
+}
+
+const shutdown = async () => {
+  const url = 'http://localhost:5000/api/turnoff'
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {'Content-Type': 'application/json'},
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json()
+    code.value = JSON.parse(responseData.code)
+    console.log(code.value)
+
+  } catch (e) {
+    toast({
+      title: 'Oops',
+      description: 'Failed fetching code from db'
+    })
+  } finally {
+    // loading.value = false
   }
 }
 

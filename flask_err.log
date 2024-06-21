@@ -1,0 +1,9 @@
+Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.28:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [21/Jun/2024 22:06:49] "GET /socket.io/?EIO=4&transport=polling&t=P0yQALm HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jun/2024 22:06:50] "POST /socket.io/?EIO=4&transport=polling&t=P0yQARX&sid=WKCfZzzB73uxGoCIAAAA HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jun/2024 22:06:50] "GET /socket.io/?EIO=4&transport=polling&t=P0yQARY&sid=WKCfZzzB73uxGoCIAAAA HTTP/1.1" 200 -

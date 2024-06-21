@@ -25,7 +25,7 @@ class MotorEncoderCombo_i2c:
         pwm_channel_minus: PWMChannelForMotor, 
         starting_angle = 0,
         is_minus_plus_swapped = False,
-        pulses_per_revolution=PULSES_PER_REVOLUTION
+        pulses_per_revolution=PULSES_PER_REVOLUTION,
         ):
         self.pwm_channel_plus = pwm_channel_plus
         self.pwm_channel_minus = pwm_channel_minus

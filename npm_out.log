@@ -1,0 +1,9 @@
+
+> rrr-robot-frontend@0.0.0 dev
+> vite --host
+
+
+  VITE v5.2.8  ready in 5650 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.1.28:5173/
