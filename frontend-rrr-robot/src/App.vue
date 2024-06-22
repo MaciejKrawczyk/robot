@@ -15,21 +15,24 @@
 
             <h2 class="font-bold text-4xl pt-4 pb-4">Manual</h2>
 
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2 select-none">
               <div class="flex gap-1">
                 <Button
-                    :disabled="theta1 > 179"
-                    @mousedown="onTheta1Plus"
-                    @mouseup="onTheta1Stop"
-                    @click="theta1 > 179"
+
+                    @mousedown.prevent="onTheta1Plus"
+                    @mouseup.prevent="onTheta1Stop"
+                    @touchstart.prevent="onTheta1Plus"
+                    @touchend.prevent="onTheta1Stop"
                 >
                   Theta1+
                 </Button>
                 <Button
-                    :disabled="theta1 < 1"
-                    @mousedown="onTheta1Minus"
-                    @mouseup="onTheta1Stop"
-                    @click="theta1 < 1"
+
+                    @mousedown.prevent="onTheta1Minus"
+                    @mouseup.prevent="onTheta1Stop"
+                    @touchstart.prevent="onTheta1Minus"
+                    @touchend.prevent="onTheta1Stop"
+
                 >
                   Theta1-
                 </Button>
@@ -37,18 +40,20 @@
 
               <div class="flex gap-1">
                 <Button
-                    :disabled="theta2 > 89"
-                    @mousedown="onTheta2Plus"
-                    @mouseup="onTheta2Stop"
-                    @click="theta2 > 89"
+
+                    @mousedown.prevent="onTheta2Plus"
+                    @mouseup.prevent="onTheta2Stop"
+                    @touchstart.prevent="onTheta2Plus"
+                    @touchend.prevent="onTheta2Stop"
                 >
                   Theta2+
                 </Button>
                 <Button
-                    :disabled="theta2 < -44"
-                    @mousedown="onTheta2Minus"
-                    @mouseup="onTheta2Stop"
-                    @click="theta2 < -44"
+
+                    @mousedown.prevent="onTheta2Minus"
+                    @mouseup.prevent="onTheta2Stop"
+                    @touchstart.prevent="onTheta2Minus"
+                    @touchend.prevent="onTheta2Stop"
                 >
                   Theta2-
                 </Button>
@@ -56,18 +61,20 @@
 
               <div class="flex gap-1">
                 <Button
-                    :disabled="theta3 > -1"
-                    @mousedown="onTheta3Plus"
-                    @mouseup="onTheta3Stop"
-                    @click="theta3 > -1"
+
+                    @mousedown.prevent="onTheta3Plus"
+                    @mouseup.prevent="onTheta3Stop"
+                    @touchstart.prevent="onTheta3Plus"
+                    @touchend.prevent="onTheta3Stop"
                 >
                   Theta3+
                 </Button>
                 <Button
-                    :disabled="theta3 < -134"
-                    @mousedown="onTheta3Minus"
-                    @mouseup="onTheta3Stop"
-                    @click="theta3 < -134"
+
+                    @mousedown.prevent="onTheta3Minus"
+                    @mouseup.prevent="onTheta3Stop"
+                    @touchstart.prevent="onTheta3Minus"
+                    @touchend.prevent="onTheta3Stop"
                 >
                   Theta3-
                 </Button>
@@ -411,7 +418,7 @@ import LoadingSmall from "@/components/LoadingSmall.vue";
 import DoneSmall from "@/components/DoneSmall.vue";
 
 
-const socket = io('http://localhost:5000');
+const socket = io('http://192.168.1.28:5000');
 let serverResponse = ref<never | {
   x: number,
   y: number,
@@ -499,7 +506,7 @@ const addCommand = () => {
 
 const saveCodeToDB = async (values: { [key: string]: string }) => {
   const code = parseCommandsToCode(values)
-  const url = 'http://localhost:5000/api/commands/1'
+  const url = 'http://192.168.1.28:5000/api/commands/1'
   try {
     const response = await fetch(url, {
       method: "PUT",
@@ -529,7 +536,7 @@ const saveCodeToDB = async (values: { [key: string]: string }) => {
 }
 
 const deletePositionFromDB = async (id: number) => {
-  const url = `http://localhost:5000/api/positions/${id}`
+  const url = `http://192.168.1.28:5000/api/positions/${id}`
   try {
     const response = await fetch(url, {
       method: 'DELETE',
@@ -562,7 +569,7 @@ const isProgramRunning = ref(false)
 const isRunProgramLoading = ref(false)
 const runProgram = async () => {
   isRunProgramLoading.value = true
-  const url = 'http://localhost:5000/api/run'
+  const url = 'http://192.168.1.28:5000/api/run'
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -583,7 +590,7 @@ const runProgram = async () => {
 const isRunEmergencyStopLoading = ref(false)
 const runEmergencyStop = async () => {
   isRunEmergencyStopLoading.value = true
-  const url = 'http://localhost:5000/api/stop'
+  const url = 'http://192.168.1.28:5000/api/stop'
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -602,7 +609,7 @@ const runEmergencyStop = async () => {
 
 const isGeneratePlotsLoading = ref(false)
 const generatePlots = async () => {
-  const url = 'http://localhost:5000/api/plot'
+  const url = 'http://192.168.1.28:5000/api/plot'
   try {
     isGeneratePlotsLoading.value = true
     const response = await fetch(url, {
@@ -620,7 +627,7 @@ const generatePlots = async () => {
 }
 
 const shutdown = async () => {
-  const url = 'http://localhost:5000/api/turnoff'
+  const url = 'http://192.168.1.28:5000/api/turnoff'
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -647,7 +654,7 @@ const shutdown = async () => {
 
 const fetchCodeFromDB = async () => {
   // loading.value = true
-  const url = 'http://localhost:5000/api/commands/1'
+  const url = 'http://192.168.1.28:5000/api/commands/1'
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -674,7 +681,7 @@ const fetchCodeFromDB = async () => {
 
 const fetchPositionsFromDB = async () => {
   loading.value = true
-  const url = 'http://localhost:5000/api/positions'
+  const url = 'http://192.168.1.28:5000/api/positions'
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -700,7 +707,7 @@ const fetchPositionsFromDB = async () => {
 }
 
 const savePositionToDB = async (position: Position) => {
-  const url = 'http://localhost:5000/api/positions'
+  const url = 'http://192.168.1.28:5000/api/positions'
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -724,7 +731,7 @@ const savePositionToDB = async (position: Position) => {
 }
 
 const saveCommandToDB = async (command: Command) => {
-  const url = 'http://localhost:5000/api/commands'
+  const url = 'http://192.168.1.28:5000/api/commands'
   try {
     const response = await fetch(url, {
       method: 'POST',

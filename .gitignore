@@ -1,0 +1,4 @@
+flask_err.log
+flask_out.log
+npm_err.log
+npm_out.log
